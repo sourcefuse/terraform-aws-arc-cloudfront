@@ -1,13 +1,20 @@
+resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
+  comment = "${var.FQDN}.sfrefarch.com"
+}
+
 resource "aws_cloudfront_distribution" "distribution" {
   origin {
-    domain_name = "sfrefarch.com"
+    domain_name = aws_s3_bucket.this.bucket_domain_name
     origin_id   = "${var.FQDN}.sfrefarch.com"
-    custom_origin_config {
-      http_port              = "80"
-      https_port             = "443"
-      origin_protocol_policy = "http-only"
-      origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+    s3_origin_config {
+      origin_access_identity = aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path
     }
+    #custom_origin_config {
+    #  http_port              = "80"
+    #  https_port             = "443"
+    #  origin_protocol_policy = "http-only"
+    #  origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
+    #}
   }
 
   default_root_object = "index.html"
