@@ -51,7 +51,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     Environment = var.environment
   }
 
-    depends_on = [
+  depends_on = [
     aws_s3_bucket.this
   ]
 }

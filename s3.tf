@@ -19,19 +19,19 @@ resource "aws_s3_bucket_website_configuration" "this" {
     key = "error.html"
   }
 
-#  routing_rule {
-#    condition {
-#      key_prefix_equals = "docs/"
-#    }
-#    redirect {
-#      replace_key_prefix_with = "documents/"
-#    }
-#  }
+  #  routing_rule {
+  #    condition {
+  #      key_prefix_equals = "docs/"
+  #    }
+  #    redirect {
+  #      replace_key_prefix_with = "documents/"
+  #    }
+  #  }
 }
 
-resource "aws_s3_bucket_policy" "this" {  
-  bucket = aws_s3_bucket.this.id   
-policy = <<POLICY
+resource "aws_s3_bucket_policy" "this" {
+  bucket = aws_s3_bucket.this.id
+  policy = <<POLICY
 {    
     "Version": "2012-10-17",    
     "Statement": [        
@@ -49,4 +49,24 @@ policy = <<POLICY
     ]
 }
 POLICY
+}
+
+
+resource "aws_s3_object" "object-upload-html" {
+  for_each     = fileset("uploads/", "*.html")
+  bucket       = aws_s3_bucket.this.bucket
+  key          = each.value
+  source       = "uploads/${each.value}"
+  content_type = "text/html"
+  etag         = filemd5("uploads/${each.value}")
+  acl          = "public-read"
+}
+resource "aws_s3_object" "object-upload-jpg" {
+  for_each     = fileset("uploads/", "*.jpeg")
+  bucket       = aws_s3_bucket.this.bucket
+  key          = each.value
+  source       = "uploads/${each.value}"
+  content_type = "image/jpeg"
+  etag         = filemd5("uploads/${each.value}")
+  acl          = "public-read"
 }
