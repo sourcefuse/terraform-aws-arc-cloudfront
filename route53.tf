@@ -1,7 +1,7 @@
 
 resource "aws_route53_record" "this" {
   zone_id = var.zone_id
-  name    = var.FQDN
+  name    = var.sub_domain
   type    = "A"
 
   alias {

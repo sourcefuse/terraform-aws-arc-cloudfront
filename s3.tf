@@ -1,10 +1,10 @@
 
 resource "aws_s3_bucket" "this" {
-  bucket = var.FQDN
+  bucket = var.sub_domain
 
 
   tags = {
-    Name        = "${var.FQDN}-${var.environment}"
+    Name        = "${var.sub_domain}-${var.environment}"
     Environment = var.environment
   }
 
@@ -35,17 +35,6 @@ resource "aws_s3_bucket_website_configuration" "this" {
   #  }
 }
 
-
-resource "aws_s3_bucket_public_access_block" "this" {
-  bucket = aws_s3_bucket.this.id
-
-  block_public_acls   = true
-  block_public_policy = true
-  //ignore_public_acls      = true
-  //restrict_public_buckets = true
-}
-
-
 resource "aws_s3_bucket_policy" "this" {
   bucket = aws_s3_bucket.this.id
   policy = <<POLICY
@@ -60,7 +49,7 @@ resource "aws_s3_bucket_policy" "this" {
              "s3:GetObject"            
           ],            
           "Resource": [
-             "arn:aws:s3:::${aws_s3_bucket.this.id}/*"            
+             "${aws_s3_bucket.this.arn}/*"            
           ]        
       }    
     ]
@@ -76,7 +65,7 @@ resource "aws_s3_object" "object-upload-html" {
   source       = "uploads/${each.value}"
   content_type = "text/html"
   etag         = filemd5("uploads/${each.value}")
-  acl          = "public-read"
+  #acl          = "public-read"
 }
 resource "aws_s3_object" "object-upload-jpg" {
   for_each     = fileset("uploads/", "*.jpeg")
@@ -85,5 +74,5 @@ resource "aws_s3_object" "object-upload-jpg" {
   source       = "uploads/${each.value}"
   content_type = "image/jpeg"
   etag         = filemd5("uploads/${each.value}")
-  acl          = "public-read"
+  #acl          = "public-read"
 }

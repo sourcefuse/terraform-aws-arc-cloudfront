@@ -2,7 +2,7 @@ variable "certificate_arn" {
   description = "Amazon Resource Name (arn) for the site's certificate"
 }
 
-variable "FQDN" {
+variable "sub_domain" {
   description = "Fully qualified domain name for site being hosted"
 }
 
@@ -33,4 +33,9 @@ variable "zone_id" {
 variable "versioning_enabled" {
   description = "Versioning for the objects in the S3 bucket"
   default     = false
+}
+
+
+variable "domain" {
+  description = "Domain to add to route 53 as alias to distribution"
 }

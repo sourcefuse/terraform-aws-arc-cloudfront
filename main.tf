@@ -1,30 +1,24 @@
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
-  comment = "${var.FQDN}.sfrefarch.com"
+  comment = "${var.sub_domain}.${var.domain}"
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
   origin {
     domain_name = aws_s3_bucket.this.bucket_domain_name
-    origin_id   = "${var.FQDN}.sfrefarch.com"
+    origin_id   = "${var.sub_domain}.${var.domain}"
     s3_origin_config {
       origin_access_identity = aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path
     }
-    #custom_origin_config {
-    #  http_port              = "80"
-    #  https_port             = "443"
-    #  origin_protocol_policy = "http-only"
-    #  origin_ssl_protocols   = ["TLSv1", "TLSv1.1", "TLSv1.2"]
-    #}
   }
 
   default_root_object = "index.html"
   enabled             = true
-  aliases             = ["${var.FQDN}.sfrefarch.com"]
+  aliases             = ["${var.sub_domain}.${var.domain}"]
 
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD"]
     cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "${var.FQDN}.sfrefarch.com"
+    target_origin_id = "${var.sub_domain}.${var.domain}"
 
     # Forward all query strings, cookies and headers
     forwarded_values {
@@ -54,7 +48,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     ssl_support_method       = "sni-only"
   }
   tags = {
-    Name        = "${var.FQDN}-s3-website-cert-${var.environment}"
+    Name        = "${var.sub_domain}-s3-website-cert-${var.environment}"
     Environment = var.environment
   }
 

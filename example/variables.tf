@@ -2,8 +2,12 @@ variable "certificate_arn" {
   description = "Amazon Resource Name (arn) for the site's certificate"
 }
 
-variable "FQDN" {
-  description = "Fully qualified domain name for site being hosted"
+variable "sub_domain" {
+  description = "Sub domain to add to route 53 as alias to distribution"
+}
+
+variable "domain" {
+  description = "Domain to add to route 53 as alias to distribution"
 }
 
 variable "responsible_party" {
