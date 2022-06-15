@@ -18,11 +18,11 @@ resource "aws_s3_bucket_acl" "this" {
 resource "aws_s3_bucket_website_configuration" "this" {
   bucket = aws_s3_bucket.this.bucket
   index_document {
-    suffix = "index.html"
+    suffix = var.default_object
   }
 
   error_document {
-    key = "error.html"
+    key = var.default_error_object
   }
 
   #  routing_rule {
@@ -67,12 +67,4 @@ resource "aws_s3_object" "object-upload-html" {
   etag         = filemd5("uploads/${each.value}")
   #acl          = "public-read"
 }
-resource "aws_s3_object" "object-upload-jpg" {
-  for_each     = fileset("uploads/", "*.jpeg")
-  bucket       = aws_s3_bucket.this.bucket
-  key          = each.value
-  source       = "uploads/${each.value}"
-  content_type = "image/jpeg"
-  etag         = filemd5("uploads/${each.value}")
-  #acl          = "public-read"
-}
+

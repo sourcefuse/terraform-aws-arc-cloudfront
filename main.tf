@@ -11,29 +11,40 @@ resource "aws_cloudfront_distribution" "distribution" {
     }
   }
 
-  default_root_object = "index.html"
+  default_root_object = var.default_object
   enabled             = true
   aliases             = ["${var.sub_domain}.${var.domain}"]
+  
+  dynamic "default_cache_behavior" {
+    for_each = var.dynamic_default_cache_behavior[*]
+    iterator = i
+    content {
+      allowed_methods        = i.value.allowed_methods
+      cached_methods         = i.value.cached_methods
+      target_origin_id       = i.value.target_origin_id
+      compress               = lookup(i.value, "compress", null)
+      viewer_protocol_policy = i.value.viewer_protocol_policy
+      min_ttl     = lookup(i.value, "min_ttl", null)
+      default_ttl = lookup(i.value, "default_ttl", null)
+      max_ttl     = lookup(i.value, "max_ttl", null)
 
-  default_cache_behavior {
-    allowed_methods  = ["GET", "HEAD"]
-    cached_methods   = ["GET", "HEAD"]
-    target_origin_id = "${var.sub_domain}.${var.domain}"
+      # dynamic "forwarded_values" {
+      #   for_each = lookup(i.value, "use_forwarded_values", true) ? [true] : []
+      #   content {
+      #     query_string = lookup(i.value, "query_string", null)
+      #     headers      = lookup(i.value, "headers", null)
 
-    # Forward all query strings, cookies and headers
-    forwarded_values {
-      query_string = false
+      #     cookies {
+      #       forward = lookup(i.value, "cookies_forward", null)
+      #     }
+      #   }
+      # }
 
-      cookies {
-        forward = "none"
-      }
     }
 
-    viewer_protocol_policy = "redirect-to-https"
-    min_ttl                = 0
-    default_ttl            = 3600
-    max_ttl                = 86400
   }
+  
+
 
   restrictions {
     geo_restriction {
