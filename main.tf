@@ -28,19 +28,16 @@ resource "aws_cloudfront_distribution" "distribution" {
       default_ttl            = lookup(i.value, "default_ttl", null)
       max_ttl                = lookup(i.value, "max_ttl", null)
 
-      # dynamic "forwarded_values" {
-      #   for_each = lookup(i.value, "use_forwarded_values", true) ? [true] : []
-      #   content {
-      #     query_string = lookup(i.value, "query_string", null)
-      #     headers      = lookup(i.value, "headers", null)
+      forwarded_values {
+        query_string = false
 
-      #     cookies {
-      #       forward = lookup(i.value, "cookies_forward", null)
-      #     }
-      #   }
-      # }
+        cookies {
+          forward = "none"
+        }
+      }
 
     }
+
 
   }
 
