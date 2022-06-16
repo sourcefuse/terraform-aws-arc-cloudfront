@@ -4,6 +4,7 @@ variable "certificate_arn" {
 
 variable "sub_domain" {
   description = "Sub domain to add to route 53 as alias to distribution"
+  default     = "ARN"
 }
 
 variable "domain" {
