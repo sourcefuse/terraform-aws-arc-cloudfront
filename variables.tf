@@ -50,5 +50,4 @@ variable "domain" {
 variable "dynamic_default_cache_behavior" {
   description = "Set the cache behavior for distrubution here"
   type        = list(any)
-  default     = []
 }
