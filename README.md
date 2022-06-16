@@ -5,7 +5,6 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 0.12 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 4.0 |
 
 ## Providers
@@ -44,7 +43,7 @@ No modules.
 | <a name="input_responsible_party"></a> [responsible\_party](#input\_responsible\_party) | Person (pid) who is primarily responsible for the configuration and maintenance of this resource | `string` | `"person1"` | no |
 | <a name="input_sub_domain"></a> [sub\_domain](#input\_sub\_domain) | Fully qualified domain name for site being hosted | `string` | `"my-sub-domain"` | no |
 | <a name="input_versioning_enabled"></a> [versioning\_enabled](#input\_versioning\_enabled) | Versioning for the objects in the S3 bucket | `bool` | `false` | no |
-| <a name="input_zone_id"></a> [zone\_id](#input\_zone\_id) | Route53 Hosted Zone ID to use for creation of records pointing to CloudFront distribution | `string` | `"zone_id"` | no |
+| <a name="input_zone_id"></a> [zone\_id](#input\_zone\_id) | Route53 Hosted Zone ID to use for creation of records pointing to CloudFront distribution | `string` | n/a | yes |
 
 ## Outputs
 

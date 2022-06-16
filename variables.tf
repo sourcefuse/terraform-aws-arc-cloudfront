@@ -38,7 +38,7 @@ variable "default_error_object" {
 variable "zone_id" {
   description = "Route53 Hosted Zone ID to use for creation of records pointing to CloudFront distribution"
   type        = string
-  default     = "zone_id"
+ # default     = "zone_id"
 }
 
 variable "versioning_enabled" {
