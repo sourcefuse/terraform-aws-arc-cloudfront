@@ -38,7 +38,7 @@ No modules.
 | <a name="input_default_error_object"></a> [default\_error\_object](#input\_default\_error\_object) | Error page being served from S3 bucket | `string` | n/a | yes |
 | <a name="input_default_object"></a> [default\_object](#input\_default\_object) | Home page being served from S3 bucket | `string` | n/a | yes |
 | <a name="input_domain"></a> [domain](#input\_domain) | Domain to add to route 53 as alias to distribution | `string` | n/a | yes |
-| <a name="input_dynamic_default_cache_behavior"></a> [dynamic\_default\_cache\_behavior](#input\_dynamic\_default\_cache\_behavior) | Set the cache behavior for distrubution here | `list(any)` | `[]` | no |
+| <a name="input_dynamic_default_cache_behavior"></a> [dynamic\_default\_cache\_behavior](#input\_dynamic\_default\_cache\_behavior) | Set the cache behavior for distrubution here | `list(any)` | n/a | yes |
 | <a name="input_environment"></a> [environment](#input\_environment) | e.g. `development`, `test`, or `production` | `string` | n/a | yes |
 | <a name="input_responsible_party"></a> [responsible\_party](#input\_responsible\_party) | Person (pid) who is primarily responsible for the configuration and maintenance of this resource | `string` | n/a | yes |
 | <a name="input_sub_domain"></a> [sub\_domain](#input\_sub\_domain) | Fully qualified domain name for site being hosted | `string` | n/a | yes |
