@@ -67,4 +67,3 @@ resource "aws_s3_object" "object-upload-html" {
   etag         = filemd5("uploads/${each.value}")
   #acl          = "public-read"
 }
-

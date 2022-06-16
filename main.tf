@@ -14,7 +14,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   default_root_object = var.default_object
   enabled             = true
   aliases             = ["${var.sub_domain}.${var.domain}"]
-  
+
   dynamic "default_cache_behavior" {
     for_each = var.dynamic_default_cache_behavior[*]
     iterator = i
@@ -24,9 +24,9 @@ resource "aws_cloudfront_distribution" "distribution" {
       target_origin_id       = i.value.target_origin_id
       compress               = lookup(i.value, "compress", null)
       viewer_protocol_policy = i.value.viewer_protocol_policy
-      min_ttl     = lookup(i.value, "min_ttl", null)
-      default_ttl = lookup(i.value, "default_ttl", null)
-      max_ttl     = lookup(i.value, "max_ttl", null)
+      min_ttl                = lookup(i.value, "min_ttl", null)
+      default_ttl            = lookup(i.value, "default_ttl", null)
+      max_ttl                = lookup(i.value, "max_ttl", null)
 
       # dynamic "forwarded_values" {
       #   for_each = lookup(i.value, "use_forwarded_values", true) ? [true] : []
@@ -43,7 +43,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     }
 
   }
-  
+
 
 
   restrictions {
