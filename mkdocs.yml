@@ -1,0 +1,4 @@
+site_name: terraform-aws-refarch-cloudfront
+site_description: Terraform CloudFront module.
+plugins:
+  - techdocs-core
