@@ -3,6 +3,7 @@ apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
   name: terraform-aws-refarch-cloudfront
+  namespace: arc
   description: Terraform CloudFront module.
   annotations:
     github.com/project-slug: sourcefuse/terraform-aws-refarch-cloudfront
