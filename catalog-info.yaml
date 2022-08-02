@@ -5,7 +5,7 @@ metadata:
   name: terraform-aws-refarch-cloudfront
   description: Terraform CloudFront module.
   annotations:
-    github.com/project-slug: https://github.com/sourcefuse/terraform-aws-refarch-cloudfront
+    github.com/project-slug: sourcefuse/terraform-aws-refarch-cloudfront
     backstage.io/techdocs-ref: dir:.
 spec:
   type: service
