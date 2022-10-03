@@ -16,7 +16,8 @@ resource "aws_s3_bucket_acl" "this" {
 }
 
 resource "aws_s3_bucket_website_configuration" "this" {
-  bucket = aws_s3_bucket.this.bucket
+  bucket             = aws_s3_bucket.this.bucket
+  versioning_enabled = var.versioning_enabled
   index_document {
     suffix = var.default_object
   }

@@ -8,10 +8,10 @@ variable "sub_domain" {
   type        = string
 }
 
-variable "responsible_party" {
-  description = "Person (pid) who is primarily responsible for the configuration and maintenance of this resource"
-  type        = string
-}
+# variable "responsible_party" {
+#   description = "Person (pid) who is primarily responsible for the configuration and maintenance of this resource"
+#   type        = string
+# }
 
 variable "environment" {
   description = "e.g. `development`, `test`, or `production`"
