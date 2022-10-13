@@ -1,7 +1,6 @@
 
 resource "aws_s3_bucket" "this" {
-  bucket            = var.sub_domain
-  block_public_acls = true
+  bucket = var.sub_domain
   versioning {
     enabled    = true
     mfa_delete = true
@@ -16,6 +15,12 @@ resource "aws_s3_bucket" "this" {
     Environment = var.environment
   }
 
+}
+
+resource "aws_s3_bucket_public_access_block" "example" {
+  bucket = aws_s3_bucket.this.id
+
+  block_public_acls = true
 }
 
 resource "aws_s3_bucket_acl" "this" {
