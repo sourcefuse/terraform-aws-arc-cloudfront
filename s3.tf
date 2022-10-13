@@ -1,7 +1,15 @@
 
 resource "aws_s3_bucket" "this" {
-  bucket = var.sub_domain
+  bucket            = var.sub_domain
+  block_public_acls = true
+  versioning {
+    enabled    = true
+    mfa_delete = true
+  }
 
+  logging {}
+
+  server_side_encryption_configuration {}
 
   tags = {
     Name        = "${var.sub_domain}-${var.environment}"
