@@ -40,3 +40,14 @@ variable "dynamic_default_cache_behavior" {
   description = "Set the cache behavior for distrubution here"
   type        = list(any)
 }
+
+variable "waf_web_acl" {
+  description = "Cloudfront rate based statement"
+  type        = string
+  default     = "rate-based-example"
+}
+
+variable "rules" {
+  type    = string
+  default = "First Rule"
+}

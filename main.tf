@@ -69,17 +69,16 @@ resource "aws_cloudfront_distribution" "distribution" {
   ]
 }
 
-resource "aws_wafv2_web_acl" "example" {
-  name        = "rate-based-example"
-  description = "Example of a Cloudfront rate based statement."
-  scope       = "CLOUDFRONT"
+resource "aws_wafv2_web_acl" "web_acl" {
+  name  = var.waf_web_acl
+  scope = "CLOUDFRONT"
 
   default_action {
     allow {}
   }
 
   rule {
-    name     = "rule-1"
+    name     = var.rules
     priority = 1
 
     override_action {
