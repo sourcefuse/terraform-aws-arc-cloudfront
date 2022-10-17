@@ -51,3 +51,13 @@ variable "rules" {
   type    = string
   default = "First Rule"
 }
+
+variable "bucket_versioning_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "bucket_versioning_mfa_delete" {
+  type    = bool
+  default = true
+}

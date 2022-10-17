@@ -2,13 +2,15 @@
 resource "aws_s3_bucket" "this" {
   bucket = var.sub_domain
   versioning {
-    enabled    = true
-    mfa_delete = true
+    enabled    = var.bucket_versioning_enabled
+    mfa_delete = var.bucket_versioning_mfa_delete
   }
 
   logging {}
 
-  server_side_encryption_configuration {}
+  server_side_encryption_configuration {
+    enabled = var.bucket_versioning_enabled
+  }
 
   tags = {
     Name        = "${var.sub_domain}-${var.environment}"
