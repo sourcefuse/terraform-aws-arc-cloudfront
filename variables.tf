@@ -8,11 +8,6 @@ variable "sub_domain" {
   type        = string
 }
 
-# variable "responsible_party" {
-#   description = "Person (pid) who is primarily responsible for the configuration and maintenance of this resource"
-#   type        = string
-# }
-
 variable "environment" {
   description = "e.g. `development`, `test`, or `production`"
   type        = string
@@ -34,12 +29,6 @@ variable "zone_id" {
   type        = string
 }
 
-variable "versioning_enabled" {
-  description = "Versioning for the objects in the S3 bucket"
-  type        = bool
-  default     = false
-}
-
 
 variable "domain" {
   description = "Domain to add to route 53 as alias to distribution"
@@ -50,4 +39,25 @@ variable "domain" {
 variable "dynamic_default_cache_behavior" {
   description = "Set the cache behavior for distrubution here"
   type        = list(any)
+}
+
+variable "waf_web_acl" {
+  description = "Cloudfront rate based statement"
+  type        = string
+  default     = "rate-based-example"
+}
+
+variable "rules" {
+  type    = string
+  default = "First Rule"
+}
+
+variable "bucket_versioning_enabled" {
+  type    = bool
+  default = true
+}
+
+variable "bucket_versioning_mfa_delete" {
+  type    = bool
+  default = true
 }

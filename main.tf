@@ -3,6 +3,10 @@ resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
+  logging_config {
+    include_cookies = false
+  }
+  web_acl_id = aws_wafv2_web_acl.example.arn
   origin {
     domain_name = aws_s3_bucket.this.bucket_domain_name
     origin_id   = "${var.sub_domain}.${var.domain}"
@@ -64,3 +68,50 @@ resource "aws_cloudfront_distribution" "distribution" {
     aws_s3_bucket.this
   ]
 }
+
+resource "aws_wafv2_web_acl" "web_acl" {
+  name  = var.waf_web_acl
+  scope = "CLOUDFRONT"
+
+  default_action {
+    allow {}
+  }
+
+  rule {
+    name     = var.rules
+    priority = 1
+
+    override_action {
+      count {}
+    }
+
+    statement {
+      managed_rule_group_statement {
+        name        = "AWSManagedRulesCommonRuleSet"
+        vendor_name = "AWS"
+
+        excluded_rule {
+          name = "SizeRestrictions_QUERYSTRING"
+        }
+
+        excluded_rule {
+          name = "NoUserAgent_HEADER"
+        }
+      }
+    }
+
+    visibility_config {
+      cloudwatch_metrics_enabled = false
+      metric_name                = "rule-metric-name"
+      sampled_requests_enabled   = false
+    }
+  }
+
+  visibility_config {
+    cloudwatch_metrics_enabled = false
+    metric_name                = "metric-name"
+    sampled_requests_enabled   = false
+  }
+}
+
+
