@@ -1,3 +1,7 @@
+terraform {
+  required_version = ">= 1.0, < 2.0"
+}
+
 module "s3_cloudfront_site" {
   source                         = "../"
   certificate_arn                = var.certificate_arn
