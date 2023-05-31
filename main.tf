@@ -153,12 +153,12 @@ resource "aws_cloudfront_distribution" "distribution" {
 
   logging_config {
     include_cookies = false
-    bucket          = module.s3_bucket.bucket_name
+    bucket          = var.bucket_name
     prefix          = var.project_name
   }
 
   viewer_certificate {
-    acm_certificate_arn = aws_acm_certificate.cert.arn
+    acm_certificate_arn = aws_acm_certificate.cert[0].arn
     ssl_support_method  = "sni-only"
   }
 
@@ -185,29 +185,24 @@ data "aws_route53_zone" "zone" {
 }
 
 resource "aws_route53_record" "record" {
-  count = var.enable_route53 ? length(aws_acm_certificate.cert.domain_validation_options) : 0
 
-  dynamic "dvo" {
-    for_each = var.enable_route53 ? aws_acm_certificate.cert.domain_validation_options : []
-    content {
-      name   = dvo.value.resource_record_name
-      record = dvo.value.resource_record_value
-      type   = dvo.value.resource_record_type
-    }
-  }
+  for_each = var.enable_route53 ? aws_acm_certificate.cert[0].domain_validation_options : []
+  name     = each.value.resource_record_name
+  records  = each.value.resource_record_value
+  type     = each.value.resource_record_type
+
+
 
   allow_overwrite = true
-  name            = dvo.value.name
-  records         = [dvo.value.record]
   ttl             = 60
-  type            = dvo.value.type
-  zone_id         = data.aws_route53_zone.zone.zone_id
+
+  zone_id = data.aws_route53_zone.zone[0].zone_id
 }
 
 
 resource "aws_acm_certificate_validation" "validation" {
   count                   = var.enable_route53 ? 1 : 0
-  certificate_arn         = aws_acm_certificate.cert.arn
+  certificate_arn         = aws_acm_certificate.cert[0].arn
   validation_record_fqdns = [for record in aws_route53_record.record : record.fqdn]
 
   depends_on = [aws_route53_record.record]
