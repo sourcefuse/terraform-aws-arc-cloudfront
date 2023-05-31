@@ -74,6 +74,35 @@ module "s3_bucket" {
 }
 
 
+resource "aws_cloudfront_cache_policy" "this" {
+  name        = "${var.environment}-${module.s3_bucket.bucket_id}-cache-policy"
+  comment     = "Cache policy"
+  default_ttl = var.cache_policy.default_ttl
+  max_ttl     = var.cache_policy.max_ttl
+  min_ttl     = var.cache_policy.min_ttl
+  parameters_in_cache_key_and_forwarded_to_origin {
+    cookies_config {
+      cookie_behavior = var.cache_policy.cookies_config.cookie_behavior
+      cookies {
+        items = var.cache_policy.cookies_config.items
+      }
+    }
+    headers_config {
+      header_behavior = var.cache_policy.cookies_config.cookie_behavior
+      headers {
+        items = var.cache_policy.cookies_config.items
+      }
+    }
+    query_strings_config {
+      query_string_behavior = var.cache_policy.query_strings_config.query_string_behavior
+      query_strings {
+        items = var.cache_policy.query_strings_config.items
+      }
+    }
+  }
+}
+
+
 resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
   bucket = module.s3_bucket.bucket_id
 
@@ -122,24 +151,22 @@ resource "aws_cloudfront_distribution" "distribution" {
   default_root_object = "index.html"
 
   dynamic "default_cache_behavior" {
-    for_each = var.dynamic_default_cache_behavior
+    for_each = var.default_cache_behavior
+    iterator = i
+
     content {
-      allowed_methods        = default_cache_behavior.value.allowed_methods
-      cached_methods         = default_cache_behavior.value.cached_methods
-      target_origin_id       = default_cache_behavior.value.target_origin_id
-      compress               = lookup(default_cache_behavior.value, "compress", null)
-      viewer_protocol_policy = default_cache_behavior.value.viewer_protocol_policy
-      min_ttl                = lookup(default_cache_behavior.value, "min_ttl", null)
-      default_ttl            = lookup(default_cache_behavior.value, "default_ttl", null)
-      max_ttl                = lookup(default_cache_behavior.value, "max_ttl", null)
+      allowed_methods        = i.value.allowed_methods
+      cached_methods         = i.value.cached_methods
+      target_origin_id       = i.value.target_origin_id
+      compress               = lookup(i.value, "compress", false)
+      viewer_protocol_policy = i.value.viewer_protocol_policy
+      min_ttl                = lookup(i.value, "min_ttl", 0)
+      default_ttl            = lookup(i.value, "default_ttl", 3600)
+      max_ttl                = lookup(i.value, "max_ttl", 86400)
 
-      forwarded_values {
-        query_string = false
+      cache_policy_id          = aws_cloudfront_cache_policy.this.id
+      origin_request_policy_id = aws_cloudfront_origin_request_policy.this.id
 
-        cookies {
-          forward = "none"
-        }
-      }
     }
   }
 
@@ -147,7 +174,8 @@ resource "aws_cloudfront_distribution" "distribution" {
 
   restrictions {
     geo_restriction {
-      restriction_type = "none"
+      restriction_type = var.geo_restriction.restriction_type
+      locations        = var.geo_restriction.locations
     }
   }
 
