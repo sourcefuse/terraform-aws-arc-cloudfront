@@ -28,4 +28,26 @@ module "cloudfront" {
     ssl_support_method             = "sni-only"
   }
 
+  cache_policy = {
+    default_ttl = 86400,
+    max_ttl     = 31536000,
+    min_ttl     = 0,
+    cookies_config = {
+      cookie_behavior = "none",
+      items           = []
+    },
+    headers_config = {
+      header_behavior = "whitelist",
+      items           = ["Authorization", "Origin", "Accept", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Referer"]
+    },
+    query_string_behavior = {
+      header_behavior = "none",
+      items           = []
+    },
+    query_strings_config = {
+      query_string_behavior = "none",
+      items                 = []
+    }
+  }
+
 }
