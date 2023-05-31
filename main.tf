@@ -177,7 +177,7 @@ resource "aws_route53_record" "record" {
     }
   }
    // Associate the CDN's domain name or alias with the Route 53 record
-  records = [aws_cloudfront_distribution.distribution.domain_name]
+  # records = [aws_cloudfront_distribution.distribution.domain_name]
 
   allow_overwrite = true
   name            = each.value.name
