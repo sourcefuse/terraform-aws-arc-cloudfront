@@ -205,3 +205,20 @@ variable "origin_request_policy" {
     }
   }
 }
+
+
+variable "viewer_certificate" {
+  type = object({
+    acm_certificate_arn            = string,
+    cloudfront_default_certificate = bool,
+    minimum_protocol_version       = string,
+    ssl_support_method             = string
+  })
+  description = "The SSL configuration for this distribution "
+  default = {
+    acm_certificate_arn            = ""
+    cloudfront_default_certificate = false
+    minimum_protocol_version       = "TLSv1.2_2018"
+    ssl_support_method             = "sni-only"
+  }
+}

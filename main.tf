@@ -186,8 +186,10 @@ resource "aws_cloudfront_distribution" "distribution" {
   }
 
   viewer_certificate {
-    acm_certificate_arn = aws_acm_certificate.cert[0].arn
-    ssl_support_method  = "sni-only"
+    acm_certificate_arn            = var.viewer_certificate.cloudfront_default_certificate ? null : aws_acm_certificate.cert[0].arn
+    cloudfront_default_certificate = var.viewer_certificate.cloudfront_default_certificate
+    minimum_protocol_version       = var.viewer_certificate.minimum_protocol_version
+    ssl_support_method             = var.viewer_certificate.ssl_support_method
   }
 
   depends_on = [aws_cloudfront_origin_access_identity.origin_access_identity]
@@ -206,32 +208,30 @@ resource "aws_acm_certificate" "cert" {
 }
 
 // used to fetch route53 zone
-data "aws_route53_zone" "zone" {
+data "aws_route53_zone" "this" {
   count        = var.enable_route53 ? 1 : 0
   name         = var.domain
   private_zone = false
 }
 
-resource "aws_route53_record" "record" {
+resource "aws_route53_record" "this" {
 
   for_each = var.enable_route53 ? aws_acm_certificate.cert[0].domain_validation_options : []
   name     = each.value.resource_record_name
   records  = each.value.resource_record_value
   type     = each.value.resource_record_type
 
-
-
   allow_overwrite = true
   ttl             = 60
 
-  zone_id = data.aws_route53_zone.zone[0].zone_id
+  zone_id = data.aws_route53_zone.this[0].zone_id
 }
 
 
-resource "aws_acm_certificate_validation" "validation" {
+resource "aws_acm_certificate_validation" "this" {
   count                   = var.enable_route53 ? 1 : 0
   certificate_arn         = aws_acm_certificate.cert[0].arn
-  validation_record_fqdns = [for record in aws_route53_record.record : record.fqdn]
+  validation_record_fqdns = [for record in aws_route53_record.this : record.fqdn]
 
-  depends_on = [aws_route53_record.record]
+  depends_on = [aws_route53_record.this]
 }
