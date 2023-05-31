@@ -1,8 +1,3 @@
-variable "profile" {
-  description = "your aws profile"
-  type        = string
-}
-
 variable "sub_domain" {
   description = "Fully qualified domain name for site being hosted"
   type        = string

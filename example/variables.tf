@@ -1,50 +1,54 @@
-variable "certificate_arn" {
-  type        = string
-  description = "Amazon Resource Name (arn) for the site's certificate"
-}
 
-variable "sub_domain" {
-  description = "Sub domain to add to route 53 as alias to distribution"
-  default     = "ARN"
-  type        = string
-}
-
-variable "domain" {
-  description = "Domain to add to route 53 as alias to distribution"
-  type        = string
-}
-
-variable "responsible_party" {
-  description = "Person (pid) who is primarily responsible for the configuration and maintenance of this resource"
-  type        = string
-}
-
+# Define the required variables
 variable "environment" {
-  description = "e.g. `development`, `test`, or `production`"
+  description = "The environment name"
   type        = string
 }
-
-variable "zone_id" {
-  description = "Route53 Hosted Zone ID to use for creation of records pointing to CloudFront distribution"
+variable "project_name" {
+  description = "The project name"
   type        = string
 }
-
-variable "versioning_enabled" {
-  description = "Versioning for the objects in the S3 bucket"
+variable "bucket_name" {
+  description = "The name of the S3 bucket"
   type        = string
 }
-
-variable "default_object" {
-  description = "Home page being served from S3 bucket"
+variable "namespace" {
+  description = "The namespace"
   type        = string
 }
-
-variable "default_error_object" {
-  description = "Error page being served from S3 bucket"
+variable "sub_domain" {
+  description = "The subdomain"
   type        = string
 }
-
+variable "domain" {
+  description = "The domain name"
+  type        = string
+}
+variable "custom_domains" {
+  description = "List of custom domain names"
+  type        = list(string)
+}
 variable "dynamic_default_cache_behavior" {
-  description = "Set the cache behavior for distrubution here"
+  description = "List of objects containing dynamic default cache behavior settings"
+  type = list(object({
+    allowed_methods        = list(string)
+    cached_methods         = list(string)
+    target_origin_id       = string
+    compress               = bool
+    viewer_protocol_policy = string
+    min_ttl                = number
+    default_ttl            = number
+    max_ttl                = number
+  }))
+}
+variable "enable_route53" {
+  description = "Whether to enable Route53 and ACM"
+  type        = bool
+  default     = false
+}
+
+variable "region" {
   type        = string
+  description = "AWS region"
+  default     = "us-east-1"
 }

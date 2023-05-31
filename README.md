@@ -47,7 +47,6 @@
 | <a name="input_enable_route53"></a> [enable\_route53](#input\_enable\_route53) | made optional route53 | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Name of the environment resources belong to. | `string` | n/a | yes |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace for the resources. | `string` | `null` | no |
-| <a name="input_profile"></a> [profile](#input\_profile) | your aws profile | `string` | n/a | yes |
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project. | `string` | `"cloudfront-iac"` | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `"us-east-1"` | no |
 | <a name="input_sub_domain"></a> [sub\_domain](#input\_sub\_domain) | Fully qualified domain name for site being hosted | `string` | n/a | yes |
