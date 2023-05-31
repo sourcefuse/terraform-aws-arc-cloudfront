@@ -1,67 +1,22 @@
-# variable "certificate_arn" {
-#   description = "Amazon Resource Name (arn) for the site's certificate"
-#   type        = string
-# }
+variable "profile" {
+  description = "your aws profile"
+  type        = string
+}
 
-# variable "sub_domain" {
-#   description = "Fully qualified domain name for site being hosted"
-#   type        = string
-# }
+variable "sub_domain" {
+  description = "Fully qualified domain name for site being hosted"
+  type        = string
+}
 
-# variable "environment" {
-#   description = "e.g. `development`, `test`, or `production`"
-#   type        = string
-# }
+variable "custom_domains" {
+  description = "Fully qualified domain name for site being hosted"
+  type        = list(string)
+}
 
-# variable "default_object" {
-#   description = "Home page being served from S3 bucket"
-#   type        = string
-# }
-
-# variable "default_error_object" {
-#   description = "Error page being served from S3 bucket"
-#   type        = string
-# }
-
-
-# variable "zone_id" {
-#   description = "Route53 Hosted Zone ID to use for creation of records pointing to CloudFront distribution"
-#   type        = string
-# }
-
-
-# variable "domain" {
-#   description = "Domain to add to route 53 as alias to distribution"
-#   type        = string
-# }
-
-
-# variable "dynamic_default_cache_behavior" {
-#   description = "Set the cache behavior for distrubution here"
-#   type        = list(any)
-# }
-
-# variable "waf_web_acl" {
-#   description = "Cloudfront rate based statement"
-#   type        = string
-#   default     = "rate-based-example"
-# }
-
-# variable "rules" {
-#   type    = string
-#   default = "First Rule"
-# }
-
-# variable "bucket_versioning_enabled" {
-#   type    = bool
-#   default = true
-# }
-
-# variable "bucket_versioning_mfa_delete" {
-#   type    = bool
-#   default = true
-# }
-
+variable "domain" {
+  description = "Domain to add to route 53 as alias to distribution"
+  type        = string
+}
 
 variable "dynamic_default_cache_behavior" {
   description = "Set the cache behavior for the distribution here"
@@ -77,4 +32,86 @@ variable "dynamic_default_cache_behavior" {
   }))
 }
 
-// need to add more variables from the code
+variable "website_redirect_all_requests_to" {
+  type = list(object({
+    host_name = string
+    protocol  = string
+  }))
+  description = "If provided, all website requests will be redirected to the specified host name and protocol"
+  default     = []
+
+  validation {
+    condition     = length(var.website_redirect_all_requests_to) < 2
+    error_message = "Only 1 website_redirect_all_requests_to is allowed."
+  }
+}
+
+variable "website_configuration" {
+  type = list(object({
+    index_document = string
+    error_document = string
+    routing_rules = list(object({
+      condition = object({
+        http_error_code_returned_equals = string
+        key_prefix_equals               = string
+      })
+      redirect = object({
+        host_name               = string
+        http_redirect_code      = string
+        protocol                = string
+        replace_key_prefix_with = string
+        replace_key_with        = string
+      })
+    }))
+  }))
+  description = "Specifies the static website hosting configuration object"
+  default     = []
+
+  validation {
+    condition     = length(var.website_configuration) < 2
+    error_message = "Only 1 website_configuration is allowed."
+  }
+}
+
+variable "cors_configuration" {
+  type = list(object({
+    allowed_headers = list(string)
+    allowed_methods = list(string)
+    allowed_origins = list(string)
+    expose_headers  = list(string)
+    max_age_seconds = number
+  }))
+  default = null
+
+  description = "Specifies the allowed headers, methods, origins and exposed headers when using CORS on this bucket"
+}
+
+variable "bucket_name" {
+  type        = string
+  default     = null
+  description = "Bucket name. If provided, the bucket will be created with this name instead of generating the name from the context"
+}
+
+variable "project_name" {
+  type        = string
+  description = "Name of the project."
+  default     = "cloudfront-iac"
+}
+
+variable "region" {
+  type        = string
+  description = "AWS region"
+  default     = "us-east-1"
+}
+
+variable "environment" {
+  type        = string
+  description = "Name of the environment resources belong to."
+}
+
+variable "namespace" {
+  type        = string
+  description = "Namespace for the resources."
+  default     = null
+}
+

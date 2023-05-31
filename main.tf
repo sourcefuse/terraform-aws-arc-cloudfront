@@ -1,47 +1,70 @@
-
 ##################################################################################
-# s3 #
+# Tags #
 ##################################################################################
 
-resource "aws_s3_bucket" "docs_bucket" {
-  bucket = "your-bucket-name"  # Update with your desired bucket name
-  acl    = "private"
+module "tags" {
+  source = "git::https://github.com/sourcefuse/terraform-aws-refarch-tags?ref=1.1.0"
 
-  logging {
-    target_bucket = aws_s3_bucket.logging_bucket.id  # Update with your desired logging bucket name
-    target_prefix = "logs/"
+  environment = var.environment
+  project     = var.project_name
+
+  extra_tags = {
+    RepoName     = "cloudfront-iac"
   }
+}
 
-  server_side_encryption_configuration {
-    rule {
-      apply_server_side_encryption_by_default {
-        sse_algorithm = "AES256"
+##################################################################################
+# s3 Module #
+##################################################################################
+
+module "s3_bucket" {
+  source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.0.0"
+
+  bucket_name = var.bucket_name
+  environment = var.environment
+  namespace   = var.namespace
+
+  enabled            = true
+  user_enabled       = false
+  versioning_enabled = true
+  bucket_key_enabled = true
+  kms_master_key_arn = "arn:${data.aws_partition.this.partition}:kms:${var.region}:${data.aws_caller_identity.this.account_id}:alias/aws/s3"
+  sse_algorithm      = "aws:kms"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          AWS = "arn:${data.aws_partition.this.partition}:iam::${data.aws_caller_identity.this.account_id}:root"
+        },
+        Action = [
+          "s3:GetObjectAttributes",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListMultipartUploadParts",
+          "s3:AbortMultipartUpload"
+        ],
+        Resource = "arn:${data.aws_partition.this.partition}:s3:::${var.namespace}-${terraform.workspace}-deployment/*"
       }
-    }
-  }
+    ]
+  })
 
-  website {
-    index_document = "index.html"
-    error_document = "404.html"
-  }
-
-  tags = {
-    Name        = "${var.sub_domain}-${var.environment}"
-    Environment = var.environment
-  }
+  privileged_principal_actions = [
+    "s3:GetObject",
+    "s3:ListBucket",
+    "s3:GetBucketLocation"
+  ]
+  website_configuration            = var.website_configuration
+  cors_configuration               = var.cors_configuration
+  website_redirect_all_requests_to = var.website_redirect_all_requests_to
+  tags = module.tags.tags
 }
 
-resource "aws_s3_bucket" "logging_bucket" {
-  bucket = "your-logging-bucket-name"  # Update with your desired logging bucket name
-  acl    = "private"
 
-  lifecycle {
-    prevent_destroy = true  # To prevent accidental deletion of logs
-  }
-}
-
-resource "aws_s3_bucket_policy" "docs_bucket_policy" {
-  bucket = aws_s3_bucket.docs_bucket.id
+resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
+  bucket = module.s3_bucket.bucket_id
 
   policy = jsonencode({
     Version   = "2012-10-17"
@@ -53,7 +76,7 @@ resource "aws_s3_bucket_policy" "docs_bucket_policy" {
           Service = "cloudfront.amazonaws.com"
         }
         Action    = "s3:GetObject"
-        Resource  = "${aws_s3_bucket.docs_bucket.arn}/*"
+        Resource  = "${module.s3_bucket.bucket_arn}/*"
         Condition = {
           StringEquals = {
             "aws:SourceArn" = aws_cloudfront_distribution.website_distribution.arn
@@ -71,12 +94,12 @@ resource "aws_s3_bucket_policy" "docs_bucket_policy" {
 resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
   comment = "Access identity for S3 origin"
 
-  depends_on = [aws_s3_bucket.docs_bucket]
+  depends_on = [module.s3_bucket]
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
   origin {
-  domain_name = aws_s3_bucket.docs_bucket.bucket_regional_domain_name
+  domain_name = module.s3_bucket.bucket_regional_domain_name
   origin_id   = "${var.sub_domain}.${var.domain}"
   s3_origin_config {
     origin_access_identity = aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path
@@ -133,8 +156,10 @@ resource "aws_cloudfront_distribution" "distribution" {
 ##################################################################################
 
 resource "aws_acm_certificate" "cert" {
-  domain_name       = "example.com"
+  domain_name       = var.domain
   validation_method = "DNS"
+
+  tags = module.tags.tags
 }
 
 // used to fetch route53 zone
