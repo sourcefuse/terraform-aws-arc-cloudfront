@@ -1,14 +1,14 @@
 module "cloudfront" {
   source = "../"
   # Pass the variable values
-  environment    = var.environment
-  project_name   = var.project_name
-  bucket_name    = var.bucket_name
-  namespace      = var.namespace
-  sub_domain     = var.sub_domain
-  domain         = var.domain
-  custom_domains = var.custom_domains
-  enable_route53 = var.enable_route53
+  environment    = "dev"
+  project_name   = "test"
+  bucket_name    = "test-cloudfront-arc"
+  namespace      = "test"
+  sub_domain     = ""
+  domain         = ""
+  aliases        = []
+  enable_route53 = false
 
   default_cache_behavior = {
     allowed_methods        = ["GET", "HEAD"]
@@ -19,6 +19,13 @@ module "cloudfront" {
     min_ttl                = 0
     default_ttl            = 86400
     max_ttl                = 31536000
+  }
+
+  viewer_certificate = {
+    acm_certificate_arn            = ""
+    cloudfront_default_certificate = true
+    minimum_protocol_version       = "TLSv1.2_2018"
+    ssl_support_method             = "sni-only"
   }
 
 

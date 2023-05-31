@@ -36,10 +36,10 @@ module "s3_bucket" {
   namespace   = var.namespace
 
   enabled            = true
-  user_enabled       = false
+  user_enabled       = true
   versioning_enabled = true
   bucket_key_enabled = true
-  kms_master_key_arn = "arn:${data.aws_partition.this.partition}:kms:${var.region}:${data.aws_caller_identity.this.account_id}:alias/aws/s3"
+  kms_master_key_arn = "arn:aws:kms:us-east-1:757583164619:key/0b9b9a25-bd27-4d38-b41c-1185ed96631a"
   sse_algorithm      = "aws:kms"
 
   policy = jsonencode({
@@ -102,6 +102,29 @@ resource "aws_cloudfront_cache_policy" "this" {
   }
 }
 
+resource "aws_cloudfront_origin_request_policy" "this" {
+  name    = "${var.environment}-${module.s3_bucket.bucket_id}-origin-request-policy"
+  comment = "Origin request policy"
+  cookies_config {
+    cookie_behavior = var.origin_request_policy.cookies_config.cookie_behavior
+    cookies {
+      items = var.origin_request_policy.cookies_config.items
+    }
+  }
+  headers_config {
+    header_behavior = var.origin_request_policy.headers_config.header_behavior
+    headers {
+      items = var.origin_request_policy.headers_config.items
+    }
+  }
+  query_strings_config {
+    query_string_behavior = var.origin_request_policy.query_strings_config.query_string_behavior
+    query_strings {
+      items = var.origin_request_policy.query_strings_config.items
+    }
+  }
+}
+
 
 resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
   bucket = module.s3_bucket.bucket_id
@@ -151,13 +174,13 @@ resource "aws_cloudfront_distribution" "distribution" {
   default_root_object = "index.html"
 
   dynamic "default_cache_behavior" {
-    for_each = var.default_cache_behavior
+    for_each = [var.default_cache_behavior]
     iterator = i
 
     content {
       allowed_methods        = i.value.allowed_methods
       cached_methods         = i.value.cached_methods
-      target_origin_id       = i.value.target_origin_id
+      target_origin_id       = "${var.sub_domain}.${var.domain}"
       compress               = lookup(i.value, "compress", false)
       viewer_protocol_policy = i.value.viewer_protocol_policy
       min_ttl                = lookup(i.value, "min_ttl", 0)
@@ -170,7 +193,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     }
   }
 
-  aliases = var.custom_domains
+  aliases = var.aliases
 
   restrictions {
     geo_restriction {
@@ -179,11 +202,11 @@ resource "aws_cloudfront_distribution" "distribution" {
     }
   }
 
-  logging_config {
-    include_cookies = false
-    bucket          = var.bucket_name
-    prefix          = var.project_name
-  }
+  #   logging_config {
+  #     include_cookies = false
+  #     bucket          = var.bucket_name
+  #     prefix          = var.project_name
+  #   }
 
   viewer_certificate {
     acm_certificate_arn            = var.viewer_certificate.cloudfront_default_certificate ? null : aws_acm_certificate.cert[0].arn
@@ -214,24 +237,24 @@ data "aws_route53_zone" "this" {
   private_zone = false
 }
 
-resource "aws_route53_record" "this" {
+# resource "aws_route53_record" "this" {
 
-  for_each = var.enable_route53 ? aws_acm_certificate.cert[0].domain_validation_options : []
-  name     = each.value.resource_record_name
-  records  = each.value.resource_record_value
-  type     = each.value.resource_record_type
+#   for_each = var.enable_route53 ? [ aws_acm_certificate.cert[0].domain_validation_options ] : []
+#   name     = each.value.resource_record_name
+#   records  = each.value.resource_record_value
+#   type     = each.value.resource_record_type
 
-  allow_overwrite = true
-  ttl             = 60
+#   allow_overwrite = true
+#   ttl             = 60
 
-  zone_id = data.aws_route53_zone.this[0].zone_id
-}
+#   zone_id = data.aws_route53_zone.this[0].zone_id
+# }
 
 
-resource "aws_acm_certificate_validation" "this" {
-  count                   = var.enable_route53 ? 1 : 0
-  certificate_arn         = aws_acm_certificate.cert[0].arn
-  validation_record_fqdns = [for record in aws_route53_record.this : record.fqdn]
+# resource "aws_acm_certificate_validation" "this" {
+#   count                   = var.enable_route53 ? 1 : 0
+#   certificate_arn         = aws_acm_certificate.cert[0].arn
+#   validation_record_fqdns = [for record in aws_route53_record.this : record.fqdn]
 
-  depends_on = [aws_route53_record.this]
-}
+#   depends_on = [aws_route53_record.this]
+# }

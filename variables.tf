@@ -3,7 +3,7 @@ variable "sub_domain" {
   type        = string
 }
 
-variable "custom_domains" {
+variable "aliases" {
   description = "Fully qualified domain name for site being hosted"
   type        = list(string)
 }

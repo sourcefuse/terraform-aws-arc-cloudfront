@@ -26,11 +26,10 @@
 | Name | Type |
 |------|------|
 | [aws_acm_certificate.cert](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate) | resource |
-| [aws_acm_certificate_validation.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/acm_certificate_validation) | resource |
 | [aws_cloudfront_cache_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_cache_policy) | resource |
 | [aws_cloudfront_distribution.distribution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution) | resource |
 | [aws_cloudfront_origin_access_control.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_origin_access_control) | resource |
-| [aws_route53_record.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
+| [aws_cloudfront_origin_request_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_origin_request_policy) | resource |
 | [aws_s3_bucket_policy.cdn_bucket_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
 | [aws_caller_identity.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
 | [aws_partition.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/partition) | data source |
@@ -40,10 +39,10 @@
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_aliases"></a> [aliases](#input\_aliases) | Fully qualified domain name for site being hosted | `list(string)` | n/a | yes |
 | <a name="input_bucket_name"></a> [bucket\_name](#input\_bucket\_name) | Bucket name. If provided, the bucket will be created with this name instead of generating the name from the context | `string` | `null` | no |
 | <a name="input_cache_policy"></a> [cache\_policy](#input\_cache\_policy) | Origin request policy | <pre>object(<br>    {<br>      default_ttl = number,<br>      max_ttl     = number,<br>      min_ttl     = number,<br>      cookies_config = object({<br>        cookie_behavior = string<br>        items           = list(string)<br>      }),<br>      headers_config = object({<br>        header_behavior = string<br>        items           = list(string)<br>      }),<br>      query_strings_config = object({<br>        query_string_behavior = string<br>        items                 = list(string)<br>      })<br>    }<br>  )</pre> | <pre>{<br>  "cookies_config": {<br>    "cookie_behavior": "none",<br>    "items": []<br>  },<br>  "default_ttl": 86400,<br>  "headers_config": {<br>    "header_behavior": "whitelist",<br>    "items": [<br>      "Authorization",<br>      "Origin",<br>      "Accept",<br>      "Access-Control-Request-Method",<br>      "Access-Control-Request-Headers",<br>      "Referer"<br>    ]<br>  },<br>  "max_ttl": 31536000,<br>  "min_ttl": 0,<br>  "query_string_behavior": {<br>    "header_behavior": "none",<br>    "items": []<br>  },<br>  "query_strings_config": {<br>    "items": [],<br>    "query_string_behavior": "none"<br>  }<br>}</pre> | no |
 | <a name="input_cors_configuration"></a> [cors\_configuration](#input\_cors\_configuration) | Specifies the allowed headers, methods, origins and exposed headers when using CORS on this bucket | <pre>list(object({<br>    allowed_headers = list(string)<br>    allowed_methods = list(string)<br>    allowed_origins = list(string)<br>    expose_headers  = list(string)<br>    max_age_seconds = number<br>  }))</pre> | `null` | no |
-| <a name="input_custom_domains"></a> [custom\_domains](#input\_custom\_domains) | Fully qualified domain name for site being hosted | `list(string)` | n/a | yes |
 | <a name="input_default_cache_behavior"></a> [default\_cache\_behavior](#input\_default\_cache\_behavior) | Set the cache behavior for the distribution here | <pre>object({<br>    allowed_methods        = list(string)<br>    cached_methods         = list(string)<br>    target_origin_id       = optional(string)<br>    compress               = bool<br>    viewer_protocol_policy = string<br>    min_ttl                = number<br>    default_ttl            = number<br>    max_ttl                = number<br>  })</pre> | n/a | yes |
 | <a name="input_domain"></a> [domain](#input\_domain) | Domain to add to route 53 as alias to distribution | `string` | n/a | yes |
 | <a name="input_enable_route53"></a> [enable\_route53](#input\_enable\_route53) | made optional route53 | `bool` | `false` | no |
