@@ -20,7 +20,7 @@ variable "domain" {
 
 variable "dynamic_default_cache_behavior" {
   description = "Set the cache behavior for the distribution here"
-  type        = list(object({
+  type = list(object({
     allowed_methods        = list(string)
     cached_methods         = list(string)
     target_origin_id       = string
@@ -116,8 +116,7 @@ variable "namespace" {
 }
 
 variable "enable_route53" {
-  type    = bool
+  type        = bool
   description = "made optional route53"
-  default  = false
+  default     = false
 }
-
