@@ -140,6 +140,12 @@ resource "aws_cloudfront_distribution" "distribution" {
     }
   }
 
+  logging_config {
+    include_cookies = false
+    bucket          = module.s3_bucket.bucket_name
+    prefix          = var.project_name
+  }
+
   viewer_certificate {
     acm_certificate_arn = aws_acm_certificate.cert.arn
     ssl_support_method  = "sni-only"
