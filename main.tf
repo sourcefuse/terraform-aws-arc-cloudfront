@@ -1,17 +1,6 @@
-################################################################################
-## account
-################################################################################
 data "aws_partition" "this" {}
 
-################################################################################
-## network
-################################################################################
 data "aws_caller_identity" "this" {}
-
-
-##################################################################################
-# Tags #
-##################################################################################
 
 module "tags" {
   source = "git::https://github.com/sourcefuse/terraform-aws-refarch-tags?ref=1.1.0"
@@ -28,19 +17,76 @@ module "tags" {
 # s3 Module #
 ##################################################################################
 
+// Module creates KMS and its related resources
+module "kms" {
+  source                  = "./modules/kms"
+  environment             = var.environment
+  alias                   = "${var.environment}/s3/${var.bucket_name}"
+  kms_key_administrators  = var.s3_kms_details.kms_key_administrators
+  kms_key_users           = var.s3_kms_details.kms_key_users
+  deletion_window_in_days = 7
+  aws_services            = ["s3.amazonaws.com", "cloudfront.amazonaws.com"]
+}
+
 module "s3_bucket" {
   source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.0.0"
 
-  bucket_name = var.bucket_name
+  bucket_name = "${var.environment}-${var.bucket_name}"
   environment = var.environment
   namespace   = var.namespace
 
   enabled            = true
-  user_enabled       = true
+  acl                = "private"
   versioning_enabled = true
   bucket_key_enabled = true
-  kms_master_key_arn = "arn:aws:kms:us-east-1:757583164619:key/0b9b9a25-bd27-4d38-b41c-1185ed96631a"
+  kms_master_key_arn = module.kms.key_arn
   sse_algorithm      = "aws:kms"
+
+  policy = jsonencode({
+    Version = "2012-10-17",
+    Statement = [
+      {
+        Effect = "Allow",
+        Principal = {
+          AWS = "arn:${data.aws_partition.this.partition}:iam::${data.aws_caller_identity.this.account_id}:root"
+        },
+        Action = [
+          "s3:GetObjectAttributes",
+          "s3:GetObject",
+          "s3:PutObject",
+          "s3:ListMultipartUploadParts",
+          "s3:AbortMultipartUpload"
+        ],
+        Resource = "arn:${data.aws_partition.this.partition}:s3:::${var.namespace}-${terraform.workspace}-deployment/*"
+      }
+    ]
+  })
+
+  privileged_principal_actions = [
+    "s3:GetObject",
+    "s3:ListBucket",
+    "s3:GetBucketLocation"
+  ]
+  cors_configuration = var.cors_configuration
+  tags               = module.tags.tags
+}
+
+module "s3_bucket_logs" {
+  source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.0.0"
+
+  count = var.enable_logging ? 1 : 0
+
+  bucket_name = "${var.environment}-${var.bucket_name}-logging"
+  environment = var.environment
+  namespace   = var.namespace
+
+  acl                 = "private"
+  s3_object_ownership = "BucketOwnerEnforced"
+  user_enabled        = true
+  versioning_enabled  = false
+  bucket_key_enabled  = true
+  kms_master_key_arn  = module.kms.key_arn
+  sse_algorithm       = "aws:kms"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -201,11 +247,15 @@ resource "aws_cloudfront_distribution" "distribution" {
     }
   }
 
-  #   logging_config {
-  #     include_cookies = false
-  #     bucket          = var.bucket_name
-  #     prefix          = var.project_name
-  #   }
+  dynamic "logging_config" {
+    for_each = var.enable_logging ? [1] : []
+
+    content {
+      include_cookies = false
+      bucket          = module.s3_bucket_logs[0].bucket_id
+      prefix          = var.project_name
+    }
+  }
 
   viewer_certificate {
     acm_certificate_arn            = var.viewer_certificate.cloudfront_default_certificate ? null : aws_acm_certificate.this[0].arn

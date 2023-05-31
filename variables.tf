@@ -184,3 +184,21 @@ variable "viewer_certificate" {
     ssl_support_method             = "sni-only"
   }
 }
+
+variable "s3_kms_details" {
+  type = object({
+    kms_key_administrators = list(string), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
+    kms_key_users          = list(string), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
+  })
+  description = "KMS details for S3 encryption"
+  default = {
+    kms_key_administrators = [],
+    kms_key_users          = []
+  }
+}
+
+variable "enable_logging" {
+  type        = bool
+  description = "Enable logging for Clouffront destribution"
+  default     = false
+}

@@ -18,7 +18,9 @@
 
 | Name | Source | Version |
 |------|--------|---------|
+| <a name="module_kms"></a> [kms](#module\_kms) | ./modules/kms | n/a |
 | <a name="module_s3_bucket"></a> [s3\_bucket](#module\_s3\_bucket) | git::https://github.com/cloudposse/terraform-aws-s3-bucket | 3.0.0 |
+| <a name="module_s3_bucket_logs"></a> [s3\_bucket\_logs](#module\_s3\_bucket\_logs) | git::https://github.com/cloudposse/terraform-aws-s3-bucket | 3.0.0 |
 | <a name="module_tags"></a> [tags](#module\_tags) | git::https://github.com/sourcefuse/terraform-aws-refarch-tags | 1.1.0 |
 
 ## Resources
@@ -48,6 +50,7 @@
 | <a name="input_cors_configuration"></a> [cors\_configuration](#input\_cors\_configuration) | Specifies the allowed headers, methods, origins and exposed headers when using CORS on this bucket | <pre>list(object({<br>    allowed_headers = list(string)<br>    allowed_methods = list(string)<br>    allowed_origins = list(string)<br>    expose_headers  = list(string)<br>    max_age_seconds = number<br>  }))</pre> | `null` | no |
 | <a name="input_default_cache_behavior"></a> [default\_cache\_behavior](#input\_default\_cache\_behavior) | Set the cache behavior for the distribution here | <pre>object({<br>    allowed_methods        = list(string)<br>    cached_methods         = list(string)<br>    target_origin_id       = optional(string)<br>    compress               = bool<br>    viewer_protocol_policy = string<br>    min_ttl                = number<br>    default_ttl            = number<br>    max_ttl                = number<br>  })</pre> | n/a | yes |
 | <a name="input_description"></a> [description](#input\_description) | CloudFron destribution description | `string` | n/a | yes |
+| <a name="input_enable_logging"></a> [enable\_logging](#input\_enable\_logging) | Enable logging for Clouffront destribution | `bool` | `false` | no |
 | <a name="input_enable_route53"></a> [enable\_route53](#input\_enable\_route53) | made optional route53 | `bool` | `false` | no |
 | <a name="input_environment"></a> [environment](#input\_environment) | Name of the environment resources belong to. | `string` | n/a | yes |
 | <a name="input_geo_restriction"></a> [geo\_restriction](#input\_geo\_restriction) | Geographic restriction | <pre>object({<br>    restriction_type = string,<br>    locations        = list(string)<br>  })</pre> | <pre>{<br>  "locations": [],<br>  "restriction_type": "none"<br>}</pre> | no |
@@ -56,6 +59,7 @@
 | <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Name of the project. | `string` | `"cloudfront-iac"` | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `"us-east-1"` | no |
 | <a name="input_route53_domain"></a> [route53\_domain](#input\_route53\_domain) | Domain to add to route 53 as alias to distribution | `string` | n/a | yes |
+| <a name="input_s3_kms_details"></a> [s3\_kms\_details](#input\_s3\_kms\_details) | KMS details for S3 encryption | <pre>object({<br>    kms_key_administrators = list(string), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"<br>    kms_key_users          = list(string), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"<br>  })</pre> | <pre>{<br>  "kms_key_administrators": [],<br>  "kms_key_users": []<br>}</pre> | no |
 | <a name="input_viewer_certificate"></a> [viewer\_certificate](#input\_viewer\_certificate) | The SSL configuration for this distribution | <pre>object({<br>    cloudfront_default_certificate = bool,<br>    minimum_protocol_version       = string,<br>    ssl_support_method             = string<br>  })</pre> | <pre>{<br>  "cloudfront_default_certificate": false,<br>  "minimum_protocol_version": "TLSv1.2_2018",<br>  "ssl_support_method": "sni-only"<br>}</pre> | no |
 
 ## Outputs

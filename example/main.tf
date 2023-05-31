@@ -10,6 +10,7 @@ module "cloudfront" {
   acm_domain     = "cf.sfrefarch.com"
   aliases        = ["cf.sfrefarch.com"]
   enable_route53 = true
+  enable_logging = true
 
   default_cache_behavior = {
     allowed_methods        = ["GET", "HEAD"]
@@ -48,6 +49,11 @@ module "cloudfront" {
       query_string_behavior = "none",
       items                 = []
     }
+  }
+
+  s3_kms_details = {
+    kms_key_administrators = [],
+    kms_key_users          = []
   }
 
 }
