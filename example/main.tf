@@ -5,10 +5,11 @@ module "cloudfront" {
   project_name   = "test"
   bucket_name    = "test-cloudfront-arc"
   namespace      = "test"
-  sub_domain     = ""
-  domain         = ""
-  aliases        = []
-  enable_route53 = false
+  description    = "This is a test Cloudfront distribution"
+  route53_domain = "sfrefarch.com"
+  acm_domain     = "cf.sfrefarch.com"
+  aliases        = ["cf.sfrefarch.com"]
+  enable_route53 = true
 
   default_cache_behavior = {
     allowed_methods        = ["GET", "HEAD"]
@@ -22,25 +23,9 @@ module "cloudfront" {
   }
 
   viewer_certificate = {
-    acm_certificate_arn            = ""
-    cloudfront_default_certificate = true
+    cloudfront_default_certificate = false // false :  will create ACM certificate with acm_domain
     minimum_protocol_version       = "TLSv1.2_2018"
     ssl_support_method             = "sni-only"
   }
 
-
 }
-
-# module "s3_cloudfront_site" {
-#   source                         = "../"
-#   certificate_arn                = var.certificate_arn
-#   environment                    = var.environment
-#   sub_domain                     = var.sub_domain
-#   domain                         = var.domain
-#   responsible_party              = var.responsible_party
-#   versioning_enabled             = var.versioning_enabled
-#   default_object                 = var.default_object
-#   default_error_object           = var.default_error_object
-#   zone_id                        = var.zone_id
-#   dynamic_default_cache_behavior = var.dynamic_default_cache_behavior
-# }

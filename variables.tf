@@ -1,15 +1,20 @@
-variable "sub_domain" {
-  description = "Fully qualified domain name for site being hosted"
-  type        = string
-}
-
 variable "aliases" {
   description = "Fully qualified domain name for site being hosted"
   type        = list(string)
 }
 
-variable "domain" {
+variable "description" {
+  description = "CloudFron destribution description"
+  type        = string
+}
+
+variable "route53_domain" {
   description = "Domain to add to route 53 as alias to distribution"
+  type        = string
+}
+
+variable "acm_domain" {
+  description = "Domain to be used in ACM"
   type        = string
 }
 
@@ -25,47 +30,6 @@ variable "default_cache_behavior" {
     default_ttl            = number
     max_ttl                = number
   })
-}
-
-variable "website_redirect_all_requests_to" {
-  type = list(object({
-    host_name = string
-    protocol  = string
-  }))
-  description = "If provided, all website requests will be redirected to the specified host name and protocol"
-  default     = []
-
-  validation {
-    condition     = length(var.website_redirect_all_requests_to) < 2
-    error_message = "Only 1 website_redirect_all_requests_to is allowed."
-  }
-}
-
-variable "website_configuration" {
-  type = list(object({
-    index_document = string
-    error_document = string
-    routing_rules = list(object({
-      condition = object({
-        http_error_code_returned_equals = string
-        key_prefix_equals               = string
-      })
-      redirect = object({
-        host_name               = string
-        http_redirect_code      = string
-        protocol                = string
-        replace_key_prefix_with = string
-        replace_key_with        = string
-      })
-    }))
-  }))
-  description = "Specifies the static website hosting configuration object"
-  default     = []
-
-  validation {
-    condition     = length(var.website_configuration) < 2
-    error_message = "Only 1 website_configuration is allowed."
-  }
 }
 
 variable "cors_configuration" {
@@ -209,14 +173,12 @@ variable "origin_request_policy" {
 
 variable "viewer_certificate" {
   type = object({
-    acm_certificate_arn            = string,
     cloudfront_default_certificate = bool,
     minimum_protocol_version       = string,
     ssl_support_method             = string
   })
   description = "The SSL configuration for this distribution "
   default = {
-    acm_certificate_arn            = ""
     cloudfront_default_certificate = false
     minimum_protocol_version       = "TLSv1.2_2018"
     ssl_support_method             = "sni-only"

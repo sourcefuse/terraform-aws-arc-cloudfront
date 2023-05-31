@@ -67,10 +67,8 @@ module "s3_bucket" {
     "s3:ListBucket",
     "s3:GetBucketLocation"
   ]
-  website_configuration            = var.website_configuration
-  cors_configuration               = var.cors_configuration
-  website_redirect_all_requests_to = var.website_redirect_all_requests_to
-  tags                             = module.tags.tags
+  cors_configuration = var.cors_configuration
+  tags               = module.tags.tags
 }
 
 
@@ -165,10 +163,11 @@ resource "aws_cloudfront_origin_access_control" "this" {
 resource "aws_cloudfront_distribution" "distribution" {
   origin {
     domain_name              = module.s3_bucket.bucket_regional_domain_name
-    origin_id                = "${var.sub_domain}.${var.domain}"
+    origin_id                = local.origin_id
     origin_access_control_id = aws_cloudfront_origin_access_control.this.id
   }
 
+  comment             = var.description
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = "index.html"
@@ -180,7 +179,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     content {
       allowed_methods        = i.value.allowed_methods
       cached_methods         = i.value.cached_methods
-      target_origin_id       = "${var.sub_domain}.${var.domain}"
+      target_origin_id       = local.origin_id
       compress               = lookup(i.value, "compress", false)
       viewer_protocol_policy = i.value.viewer_protocol_policy
       min_ttl                = lookup(i.value, "min_ttl", 0)
@@ -209,7 +208,7 @@ resource "aws_cloudfront_distribution" "distribution" {
   #   }
 
   viewer_certificate {
-    acm_certificate_arn            = var.viewer_certificate.cloudfront_default_certificate ? null : aws_acm_certificate.cert[0].arn
+    acm_certificate_arn            = var.viewer_certificate.cloudfront_default_certificate ? null : aws_acm_certificate.this[0].arn
     cloudfront_default_certificate = var.viewer_certificate.cloudfront_default_certificate
     minimum_protocol_version       = var.viewer_certificate.minimum_protocol_version
     ssl_support_method             = var.viewer_certificate.ssl_support_method
@@ -222,9 +221,9 @@ resource "aws_cloudfront_distribution" "distribution" {
 # Route53 and ACM #
 ##################################################################################
 
-resource "aws_acm_certificate" "cert" {
+resource "aws_acm_certificate" "this" {
   count             = var.enable_route53 ? 1 : 0
-  domain_name       = var.domain
+  domain_name       = var.acm_domain
   validation_method = "DNS"
 
   tags = module.tags.tags
@@ -233,28 +232,32 @@ resource "aws_acm_certificate" "cert" {
 // used to fetch route53 zone
 data "aws_route53_zone" "this" {
   count        = var.enable_route53 ? 1 : 0
-  name         = var.domain
+  name         = var.route53_domain
   private_zone = false
 }
 
-# resource "aws_route53_record" "this" {
+resource "aws_route53_record" "this" {
+  for_each = var.enable_route53 ? {
+    for dvo in aws_acm_certificate.this[0].domain_validation_options : dvo.domain_name => {
+      name   = dvo.resource_record_name
+      record = dvo.resource_record_value
+      type   = dvo.resource_record_type
+    }
+  } : {}
 
-#   for_each = var.enable_route53 ? [ aws_acm_certificate.cert[0].domain_validation_options ] : []
-#   name     = each.value.resource_record_name
-#   records  = each.value.resource_record_value
-#   type     = each.value.resource_record_type
-
-#   allow_overwrite = true
-#   ttl             = 60
-
-#   zone_id = data.aws_route53_zone.this[0].zone_id
-# }
+  allow_overwrite = true
+  name            = each.value.name
+  records         = [each.value.record]
+  ttl             = 60
+  type            = each.value.type
+  zone_id         = data.aws_route53_zone.this[0].zone_id
+}
 
 
-# resource "aws_acm_certificate_validation" "this" {
-#   count                   = var.enable_route53 ? 1 : 0
-#   certificate_arn         = aws_acm_certificate.cert[0].arn
-#   validation_record_fqdns = [for record in aws_route53_record.this : record.fqdn]
+resource "aws_acm_certificate_validation" "this" {
+  count                   = var.enable_route53 ? 1 : 0
+  certificate_arn         = aws_acm_certificate.this[0].arn
+  validation_record_fqdns = [for record in aws_route53_record.this : record.fqdn]
 
-#   depends_on = [aws_route53_record.this]
-# }
+  depends_on = [aws_route53_record.this]
+}
