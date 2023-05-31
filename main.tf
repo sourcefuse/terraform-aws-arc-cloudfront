@@ -1,3 +1,14 @@
+################################################################################
+## account
+################################################################################
+data "aws_partition" "this" {}
+
+################################################################################
+## network
+################################################################################
+data "aws_caller_identity" "this" {}
+
+
 ##################################################################################
 # Tags #
 ##################################################################################
@@ -79,7 +90,7 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
         Resource = "${module.s3_bucket.bucket_arn}/*"
         Condition = {
           StringEquals = {
-            "aws:SourceArn" = aws_cloudfront_distribution.website_distribution.arn
+            "aws:SourceArn" = aws_cloudfront_distribution.distribution.arn
           }
         }
       }
@@ -174,24 +185,25 @@ data "aws_route53_zone" "zone" {
 }
 
 resource "aws_route53_record" "record" {
-  count = var.enable_route53 ? 1 : 0
-  for_each = {
-    for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
+  count = var.enable_route53 ? length(aws_acm_certificate.cert.domain_validation_options) : 0
+
+  dynamic "dvo" {
+    for_each = var.enable_route53 ? aws_acm_certificate.cert.domain_validation_options : []
+    content {
+      name   = dvo.value.resource_record_name
+      record = dvo.value.resource_record_value
+      type   = dvo.value.resource_record_type
     }
   }
-  // Associate the CDN's domain name or alias with the Route 53 record
-  # records = [aws_cloudfront_distribution.distribution.domain_name]
 
   allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
+  name            = dvo.value.name
+  records         = [dvo.value.record]
   ttl             = 60
-  type            = each.value.type
+  type            = dvo.value.type
   zone_id         = data.aws_route53_zone.zone.zone_id
 }
+
 
 resource "aws_acm_certificate_validation" "validation" {
   count                   = var.enable_route53 ? 1 : 0
