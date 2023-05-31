@@ -15,16 +15,16 @@ variable "domain" {
 
 variable "default_cache_behavior" {
   description = "Set the cache behavior for the distribution here"
-  type = list(object({
+  type = object({
     allowed_methods        = list(string)
     cached_methods         = list(string)
-    target_origin_id       = string
+    target_origin_id       = optional(string)
     compress               = bool
     viewer_protocol_policy = string
     min_ttl                = number
     default_ttl            = number
     max_ttl                = number
-  }))
+  })
 }
 
 variable "website_redirect_all_requests_to" {

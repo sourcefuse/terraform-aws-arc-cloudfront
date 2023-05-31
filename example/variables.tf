@@ -28,19 +28,7 @@ variable "custom_domains" {
   description = "List of custom domain names"
   type        = list(string)
 }
-variable "dynamic_default_cache_behavior" {
-  description = "List of objects containing dynamic default cache behavior settings"
-  type = list(object({
-    allowed_methods        = list(string)
-    cached_methods         = list(string)
-    target_origin_id       = string
-    compress               = bool
-    viewer_protocol_policy = string
-    min_ttl                = number
-    default_ttl            = number
-    max_ttl                = number
-  }))
-}
+
 variable "enable_route53" {
   description = "Whether to enable Route53 and ACM"
   type        = bool

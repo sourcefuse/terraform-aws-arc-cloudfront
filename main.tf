@@ -131,19 +131,19 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
 # CDN #
 ##################################################################################
 
-resource "aws_cloudfront_origin_access_identity" "origin_access_identity" {
-  comment = "Access identity for S3 origin"
-
-  depends_on = [module.s3_bucket]
+resource "aws_cloudfront_origin_access_control" "this" {
+  name                              = "${var.environment}-cf-origin-access-control"
+  description                       = "Origin access control"
+  origin_access_control_origin_type = "s3"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 resource "aws_cloudfront_distribution" "distribution" {
   origin {
-    domain_name = module.s3_bucket.bucket_regional_domain_name
-    origin_id   = "${var.sub_domain}.${var.domain}"
-    s3_origin_config {
-      origin_access_identity = aws_cloudfront_origin_access_identity.origin_access_identity.cloudfront_access_identity_path
-    }
+    domain_name              = module.s3_bucket.bucket_regional_domain_name
+    origin_id                = "${var.sub_domain}.${var.domain}"
+    origin_access_control_id = aws_cloudfront_origin_access_control.this.id
   }
 
   enabled             = true
@@ -192,7 +192,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     ssl_support_method             = var.viewer_certificate.ssl_support_method
   }
 
-  depends_on = [aws_cloudfront_origin_access_identity.origin_access_identity]
+  depends_on = [aws_cloudfront_origin_access_control.this]
 }
 
 ##################################################################################
