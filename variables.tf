@@ -115,3 +115,9 @@ variable "namespace" {
   default     = null
 }
 
+variable "enable_route53" {
+  type    = bool
+  description = "made optional route53"
+  default  = false
+}
+

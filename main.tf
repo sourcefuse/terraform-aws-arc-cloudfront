@@ -151,10 +151,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     ssl_support_method  = "sni-only"
   }
 
-  depends_on = [aws_cloudfront_origin_access_identity.origin_access_identity,
-    aws_route53_record.record,
-    aws_acm_certificate_validation.validation
-    ]
+  depends_on = [aws_cloudfront_origin_access_identity.origin_access_identity]
 }
 
 ##################################################################################
@@ -162,6 +159,7 @@ resource "aws_cloudfront_distribution" "distribution" {
 ##################################################################################
 
 resource "aws_acm_certificate" "cert" {
+  count             = var.enable_route53 ? 1 : 0
   domain_name       = var.domain
   validation_method = "DNS"
 
@@ -170,11 +168,13 @@ resource "aws_acm_certificate" "cert" {
 
 // used to fetch route53 zone
 data "aws_route53_zone" "zone" {
+  count        = var.enable_route53 ? 1 : 0
   name         = var.domain
   private_zone = false
 }
 
 resource "aws_route53_record" "record" {
+  count        = var.enable_route53 ? 1 : 0
   for_each = {
     for dvo in aws_acm_certificate.cert.domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
@@ -194,6 +194,7 @@ resource "aws_route53_record" "record" {
 }
 
 resource "aws_acm_certificate_validation" "validation" {
+  count        = var.enable_route53 ? 1 : 0
   certificate_arn         = aws_acm_certificate.cert.arn
   validation_record_fqdns = [for record in aws_route53_record.record : record.fqdn]
 
