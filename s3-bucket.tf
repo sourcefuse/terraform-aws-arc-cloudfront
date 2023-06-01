@@ -66,9 +66,7 @@ module "s3_bucket_logs" {
   environment = local.environment
   namespace   = var.namespace
 
-  acl = "log-delivery-write"
-  #s3_object_ownership = "BucketOwnerEnforced"
-  #   user_enabled        = true
+  acl                = "log-delivery-write"
   versioning_enabled = false
   bucket_key_enabled = true
   kms_master_key_arn = module.kms.key_arn
