@@ -1,4 +1,81 @@
-# terraform-aws-refarch-cloudfront
+# [terraform-aws-refarch-cloudfront](https://github.com/sourcefuse/terraform-aws-refarch-cloudfront)
+
+[![Known Vulnerabilities](https://github.com/sourcefuse/terraform-aws-refarch-cloudfront/actions/workflows/snyk.yaml/badge.svg)](https://github.com/sourcefuse/terraform-aws-refarch-cloudfront/actions/workflows/snyk.yaml)
+
+## Overview
+
+SourceFuse AWS Reference Architecture (ARC) Terraform module for managing Cloudfront, S3, Route53 and ACM.
+
+## Usage
+
+To see a full example, check out the [main.tf](./example/main.tf) file in the example folder.
+
+``` hcl
+module "cloudfront" {
+  source = "../"
+
+  bucket_name            = "test-cloudfront-arc"
+  namespace              = "test"
+  description            = "This is a test Cloudfront distribution"
+  route53_root_domain    = "sfrefarch.com" // Used to fetch the Hosted Zone
+  create_route53_records = var.create_route53_records
+  aliases                = ["cf.sfrefarch.com", "www.cf.sfrefarch.com"]
+  enable_logging         = var.enable_logging // Create a new S3 bucket for storing Cloudfront logs
+
+  default_cache_behavior = {
+    allowed_methods        = ["GET", "HEAD"]
+    cached_methods         = ["GET", "HEAD"]
+    target_origin_id       = "dummy"
+    compress               = false
+    viewer_protocol_policy = "redirect-to-https"
+    min_ttl                = 0
+    default_ttl            = 86400
+    max_ttl                = 31536000
+  }
+
+  viewer_certificate = {
+    cloudfront_default_certificate = false // false :  It will create ACM certificate with details provided in acm_details
+    minimum_protocol_version       = "TLSv1.2_2018"
+    ssl_support_method             = "sni-only"
+  }
+
+  acm_details = {
+    domain_name               = "cf.sfrefarch.com",
+    subject_alternative_names = ["www.cf.sfrefarch.com"]
+  }
+
+  cache_policy = {
+    default_ttl = 86400,
+    max_ttl     = 31536000,
+    min_ttl     = 0,
+    cookies_config = {
+      cookie_behavior = "none",
+      items           = []
+    },
+    headers_config = {
+      header_behavior = "whitelist",
+      items           = ["Authorization", "Origin", "Accept", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Referer"]
+    },
+    query_string_behavior = {
+      header_behavior = "none",
+      items           = []
+    },
+    query_strings_config = {
+      query_string_behavior = "none",
+      items                 = []
+    }
+  }
+
+  s3_kms_details = {
+    kms_key_administrators = [],
+    kms_key_users          = ["arn:aws:iam::757583164619:role/sourcefuse-poc-2-admin-role"] // Note :- Add users/roles who wanted to read/write to S3 bucket
+  }
+
+  tags = module.tags.tags
+
+}
+
+```
 
 <!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
@@ -63,5 +140,35 @@
 
 ## Outputs
 
-No outputs.
+| Name | Description |
+|------|-------------|
+| <a name="output_acm_certificate_arn"></a> [acm\_certificate\_arn](#output\_acm\_certificate\_arn) | Certificate ARN |
+| <a name="output_cloudfront_arn"></a> [cloudfront\_arn](#output\_cloudfront\_arn) | CloudFront ARN |
+| <a name="output_cloudfront_domain_name"></a> [cloudfront\_domain\_name](#output\_cloudfront\_domain\_name) | CloudFront Domain name |
+| <a name="output_cloudfront_hosted_zone_id"></a> [cloudfront\_hosted\_zone\_id](#output\_cloudfront\_hosted\_zone\_id) | CloudFront Hosted zone ID |
+| <a name="output_cloudfront_id"></a> [cloudfront\_id](#output\_cloudfront\_id) | CloudFront ID |
+| <a name="output_logging_s3_bucket"></a> [logging\_s3\_bucket](#output\_logging\_s3\_bucket) | Logging bucket name |
+| <a name="output_origin_s3_bucket"></a> [origin\_s3\_bucket](#output\_origin\_s3\_bucket) | Origin bucket name |
 <!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
+
+## Development
+
+### Prerequisites
+
+- [terraform](https://learn.hashicorp.com/terraform/getting-started/install#installing-terraform)
+- [terraform-docs](https://github.com/segmentio/terraform-docs)
+- [pre-commit](https://pre-commit.com/#install)
+
+### Configurations
+
+- Configure pre-commit hooks
+
+```sh
+pre-commit install
+```
+
+## Authors
+
+This project is authored by:
+
+- SourceFuse

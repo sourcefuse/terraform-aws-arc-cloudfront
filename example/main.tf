@@ -16,9 +16,9 @@ module "cloudfront" {
   namespace              = "test"
   description            = "This is a test Cloudfront distribution"
   route53_root_domain    = "sfrefarch.com" // Used to fetch the Hosted Zone
-  create_route53_records = true
+  create_route53_records = var.create_route53_records
   aliases                = ["cf.sfrefarch.com", "www.cf.sfrefarch.com"]
-  enable_logging         = true // Create a new S3 bucket for storing Cloudfront logs
+  enable_logging         = var.enable_logging // Create a new S3 bucket for storing Cloudfront logs
 
   default_cache_behavior = {
     allowed_methods        = ["GET", "HEAD"]
