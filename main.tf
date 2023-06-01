@@ -2,124 +2,8 @@ data "aws_partition" "this" {}
 
 data "aws_caller_identity" "this" {}
 
-module "tags" {
-  source = "git::https://github.com/sourcefuse/terraform-aws-refarch-tags?ref=1.1.0"
-
-  environment = var.environment
-  project     = var.project_name
-
-  extra_tags = {
-    RepoName = "cloudfront-iac"
-  }
-}
-
-##################################################################################
-# s3 Module #
-##################################################################################
-
-// Module creates KMS and its related resources
-module "kms" {
-  source                  = "./modules/kms"
-  environment             = var.environment
-  alias                   = "${var.environment}/s3/${var.bucket_name}"
-  kms_key_administrators  = var.s3_kms_details.kms_key_administrators
-  kms_key_users           = var.s3_kms_details.kms_key_users
-  deletion_window_in_days = 7
-  aws_services            = ["s3.amazonaws.com", "cloudfront.amazonaws.com"]
-}
-
-module "s3_bucket" {
-  source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.0.0"
-
-  bucket_name = "${var.environment}-${var.bucket_name}"
-  environment = var.environment
-  namespace   = var.namespace
-
-  enabled            = true
-  acl                = "private"
-  versioning_enabled = true
-  bucket_key_enabled = true
-  kms_master_key_arn = module.kms.key_arn
-  sse_algorithm      = "aws:kms"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          AWS = "arn:${data.aws_partition.this.partition}:iam::${data.aws_caller_identity.this.account_id}:root"
-        },
-        Action = [
-          "s3:GetObjectAttributes",
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListMultipartUploadParts",
-          "s3:AbortMultipartUpload"
-        ],
-        Resource = "arn:${data.aws_partition.this.partition}:s3:::${var.namespace}-${terraform.workspace}-deployment/*"
-      }
-    ]
-  })
-
-  privileged_principal_actions = [
-    "s3:GetObject",
-    "s3:ListBucket",
-    "s3:GetBucketLocation"
-  ]
-  cors_configuration = var.cors_configuration
-  tags               = module.tags.tags
-}
-
-module "s3_bucket_logs" {
-  source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.0.0"
-
-  count = var.enable_logging ? 1 : 0
-
-  bucket_name = "${var.environment}-${var.bucket_name}-logging"
-  environment = var.environment
-  namespace   = var.namespace
-
-  acl                 = "private"
-  s3_object_ownership = "BucketOwnerEnforced"
-  user_enabled        = true
-  versioning_enabled  = false
-  bucket_key_enabled  = true
-  kms_master_key_arn  = module.kms.key_arn
-  sse_algorithm       = "aws:kms"
-
-  policy = jsonencode({
-    Version = "2012-10-17",
-    Statement = [
-      {
-        Effect = "Allow",
-        Principal = {
-          AWS = "arn:${data.aws_partition.this.partition}:iam::${data.aws_caller_identity.this.account_id}:root"
-        },
-        Action = [
-          "s3:GetObjectAttributes",
-          "s3:GetObject",
-          "s3:PutObject",
-          "s3:ListMultipartUploadParts",
-          "s3:AbortMultipartUpload"
-        ],
-        Resource = "arn:${data.aws_partition.this.partition}:s3:::${var.namespace}-${terraform.workspace}-deployment/*"
-      }
-    ]
-  })
-
-  privileged_principal_actions = [
-    "s3:GetObject",
-    "s3:ListBucket",
-    "s3:GetBucketLocation"
-  ]
-  cors_configuration = var.cors_configuration
-  tags               = module.tags.tags
-}
-
-
 resource "aws_cloudfront_cache_policy" "this" {
-  name        = "${var.environment}-${module.s3_bucket.bucket_id}-cache-policy"
+  name        = "${local.environment}-${module.s3_bucket.bucket_id}-cache-policy"
   comment     = "Cache policy"
   default_ttl = var.cache_policy.default_ttl
   max_ttl     = var.cache_policy.max_ttl
@@ -144,10 +28,11 @@ resource "aws_cloudfront_cache_policy" "this" {
       }
     }
   }
+
 }
 
 resource "aws_cloudfront_origin_request_policy" "this" {
-  name    = "${var.environment}-${module.s3_bucket.bucket_id}-origin-request-policy"
+  name    = "${local.environment}-${module.s3_bucket.bucket_id}-origin-request-policy"
   comment = "Origin request policy"
   cookies_config {
     cookie_behavior = var.origin_request_policy.cookies_config.cookie_behavior
@@ -186,7 +71,7 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
         Resource = "${module.s3_bucket.bucket_arn}/*"
         Condition = {
           StringEquals = {
-            "aws:SourceArn" = aws_cloudfront_distribution.distribution.arn
+            "aws:SourceArn" = aws_cloudfront_distribution.this.arn
           }
         }
       }
@@ -199,14 +84,14 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
 ##################################################################################
 
 resource "aws_cloudfront_origin_access_control" "this" {
-  name                              = "${var.environment}-cf-origin-access-control"
+  name                              = "${local.environment}-cf-origin-access-control"
   description                       = "Origin access control"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
 }
 
-resource "aws_cloudfront_distribution" "distribution" {
+resource "aws_cloudfront_distribution" "this" {
   origin {
     domain_name              = module.s3_bucket.bucket_regional_domain_name
     origin_id                = local.origin_id
@@ -252,8 +137,8 @@ resource "aws_cloudfront_distribution" "distribution" {
 
     content {
       include_cookies = false
-      bucket          = module.s3_bucket_logs[0].bucket_id
-      prefix          = var.project_name
+      bucket          = module.s3_bucket_logs[0].bucket_domain_name
+      prefix          = local.environment
     }
   }
 
@@ -264,50 +149,7 @@ resource "aws_cloudfront_distribution" "distribution" {
     ssl_support_method             = var.viewer_certificate.ssl_support_method
   }
 
+  tags = var.tags
+
   depends_on = [aws_cloudfront_origin_access_control.this]
-}
-
-##################################################################################
-# Route53 and ACM #
-##################################################################################
-
-resource "aws_acm_certificate" "this" {
-  count             = var.enable_route53 ? 1 : 0
-  domain_name       = var.acm_domain
-  validation_method = "DNS"
-
-  tags = module.tags.tags
-}
-
-// used to fetch route53 zone
-data "aws_route53_zone" "this" {
-  count        = var.enable_route53 ? 1 : 0
-  name         = var.route53_domain
-  private_zone = false
-}
-
-resource "aws_route53_record" "this" {
-  for_each = var.enable_route53 ? {
-    for dvo in aws_acm_certificate.this[0].domain_validation_options : dvo.domain_name => {
-      name   = dvo.resource_record_name
-      record = dvo.resource_record_value
-      type   = dvo.resource_record_type
-    }
-  } : {}
-
-  allow_overwrite = true
-  name            = each.value.name
-  records         = [each.value.record]
-  ttl             = 60
-  type            = each.value.type
-  zone_id         = data.aws_route53_zone.this[0].zone_id
-}
-
-
-resource "aws_acm_certificate_validation" "this" {
-  count                   = var.enable_route53 ? 1 : 0
-  certificate_arn         = aws_acm_certificate.this[0].arn
-  validation_record_fqdns = [for record in aws_route53_record.this : record.fqdn]
-
-  depends_on = [aws_route53_record.this]
 }

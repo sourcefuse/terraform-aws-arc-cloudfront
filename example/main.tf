@@ -1,16 +1,24 @@
+module "tags" {
+  source = "git::https://github.com/sourcefuse/terraform-aws-refarch-tags?ref=1.1.0"
+
+  environment = "dev"
+  project     = "test"
+
+  extra_tags = {
+    RepoName = "terraform-aws-refarch-cloudfront"
+  }
+}
+
 module "cloudfront" {
   source = "../"
-  # Pass the variable values
-  environment    = "dev"
-  project_name   = "test"
-  bucket_name    = "test-cloudfront-arc"
-  namespace      = "test"
-  description    = "This is a test Cloudfront distribution"
-  route53_domain = "sfrefarch.com"
-  acm_domain     = "cf.sfrefarch.com"
-  aliases        = ["cf.sfrefarch.com"]
-  enable_route53 = true
-  enable_logging = true
+
+  bucket_name            = "test-cloudfront-arc"
+  namespace              = "test"
+  description            = "This is a test Cloudfront distribution"
+  route53_root_domain    = "sfrefarch.com" // Used to fetch the Hosted Zone
+  create_route53_records = true
+  aliases                = ["cf.sfrefarch.com", "www.cf.sfrefarch.com"]
+  enable_logging         = true // Create a new S3 bucket for storing Cloudfront logs
 
   default_cache_behavior = {
     allowed_methods        = ["GET", "HEAD"]
@@ -24,9 +32,14 @@ module "cloudfront" {
   }
 
   viewer_certificate = {
-    cloudfront_default_certificate = false // false :  will create ACM certificate with acm_domain
+    cloudfront_default_certificate = false // false :  It will create ACM certificate with details provided in acm_details
     minimum_protocol_version       = "TLSv1.2_2018"
     ssl_support_method             = "sni-only"
+  }
+
+  acm_details = {
+    domain_name               = "cf.sfrefarch.com",
+    subject_alternative_names = ["www.cf.sfrefarch.com"]
   }
 
   cache_policy = {
@@ -53,7 +66,9 @@ module "cloudfront" {
 
   s3_kms_details = {
     kms_key_administrators = [],
-    kms_key_users          = []
+    kms_key_users          = ["arn:aws:iam::757583164619:role/sourcefuse-poc-2-admin-role"] // Note :- Add users/roles who wanted to read/write to S3 bucket
   }
+
+  tags = module.tags.tags
 
 }

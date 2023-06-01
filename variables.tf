@@ -8,13 +8,8 @@ variable "description" {
   type        = string
 }
 
-variable "route53_domain" {
+variable "route53_root_domain" {
   description = "Domain to add to route 53 as alias to distribution"
-  type        = string
-}
-
-variable "acm_domain" {
-  description = "Domain to be used in ACM"
   type        = string
 }
 
@@ -51,22 +46,12 @@ variable "bucket_name" {
   description = "Bucket name. If provided, the bucket will be created with this name instead of generating the name from the context"
 }
 
-variable "project_name" {
-  type        = string
-  description = "Name of the project."
-  default     = "cloudfront-iac"
+variable "tags" {
+  type        = map(string)
+  description = "Tags for AWS resources"
+  default     = {}
 }
 
-variable "region" {
-  type        = string
-  description = "AWS region"
-  default     = "us-east-1"
-}
-
-variable "environment" {
-  type        = string
-  description = "Name of the environment resources belong to."
-}
 
 variable "namespace" {
   type        = string
@@ -74,7 +59,7 @@ variable "namespace" {
   default     = null
 }
 
-variable "enable_route53" {
+variable "create_route53_records" {
   type        = bool
   description = "made optional route53"
   default     = false
@@ -199,6 +184,24 @@ variable "s3_kms_details" {
 
 variable "enable_logging" {
   type        = bool
-  description = "Enable logging for Clouffront destribution"
+  description = "Enable logging for Clouffront destribution, this will create new S3 bucket"
   default     = false
+}
+
+variable "acm_details" {
+  type = object({
+    domain_name               = string,
+    subject_alternative_names = list(string),
+  })
+  description = "Details required for creating certificate"
+  default = {
+    domain_name               = "test.com",
+    subject_alternative_names = ["www.test.com"]
+  }
+}
+
+variable "route53_record_ttl" {
+  type        = string
+  description = "TTL for Route53 record"
+  default     = 60
 }
