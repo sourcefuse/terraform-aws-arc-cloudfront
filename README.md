@@ -173,7 +173,7 @@ pre-commit install
 
 ```sh
 cd test
-go mod init github.com/sourcefuse/terraform-aws-ref-arch-db
+go mod init github.com/sourcefuse/terraform-aws-refarch-cloudfront
 go get github.com/gruntwork-io/terratest/modules/terraform
 ```
 
