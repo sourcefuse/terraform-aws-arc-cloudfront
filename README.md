@@ -187,4 +187,4 @@ go test
 
 This project is authored by:
 
-- SourceFuse
+- SourceFuse ARC Team
