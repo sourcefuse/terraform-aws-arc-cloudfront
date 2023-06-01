@@ -166,7 +166,23 @@ module "cloudfront" {
 ```sh
 pre-commit install
 ```
+### Tests
 
+- Tests are available in `test` directory
+- Configure the dependencies
+
+```sh
+cd test
+go mod init github.com/sourcefuse/terraform-aws-refarch-cloudfront
+go get github.com/gruntwork-io/terratest/modules/terraform
+```
+
+- Now execute the test
+
+```sh
+cd test/
+go test
+```
 ## Authors
 
 This project is authored by:
