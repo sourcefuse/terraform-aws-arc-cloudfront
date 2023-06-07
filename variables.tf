@@ -3,6 +3,13 @@ variable "aliases" {
   type        = list(string)
 }
 
+variable "default_root_object" {
+  type        = string
+  default     = "index.html"
+  description = " Object that you want CloudFront to return (for example, index.html) when an end user requests the root URL."
+}
+
+
 variable "description" {
   description = "CloudFron destribution description"
   type        = string
@@ -14,17 +21,51 @@ variable "route53_root_domain" {
 }
 
 variable "default_cache_behavior" {
-  description = "Set the cache behavior for the distribution here"
+  description = "Default cache behavior for the distribution"
   type = object({
-    allowed_methods        = list(string)
-    cached_methods         = list(string)
-    target_origin_id       = optional(string)
-    compress               = bool
-    viewer_protocol_policy = string
-    min_ttl                = number
-    default_ttl            = number
-    max_ttl                = number
+    allowed_methods = list(string)
+    cached_methods  = list(string)
+    function_association = optional(list(object({ // A config block that triggers a lambda function with specific actions (maximum 4).
+      event_type   = string,                      // Specific event to trigger this function. Valid values: viewer-request or viewer-response.
+      function_arn = string
+    })))
+    lambda_function_association = optional(list(object({ // A config block that triggers a lambda function with specific actions (maximum 4).
+      event_type   = string,
+      lambda_arn   = string,
+      include_body = bool // When set to true it exposes the request body to the lambda function.
+    })))
+    use_aws_managed_cache_policy          = bool,
+    cache_policy_name                     = string, // It can be custom or aws managed policy name , if custom cache_policies variable key should match
+    use_aws_managed_origin_request_policy = optional(bool),
+    origin_request_policy_name            = optional(string), // It can be custom or aws managed policy name , if custom origin_request_policies variable key should match
+    compress                              = bool
+    viewer_protocol_policy                = string
   })
+}
+
+variable "cache_behaviors" {
+  description = "Set the cache behaviors for the distribution , Note:-  You cannot use an origin request policy in a cache behavior without a cache policy."
+  type = list(object({
+    path_pattern    = string
+    allowed_methods = list(string)
+    cached_methods  = list(string)
+    function_association = optional(list(object({ // Specific event to trigger this function. Valid values: viewer-request or viewer-response.
+      event_type   = string,
+      function_arn = string
+    })))
+    lambda_function_association = optional(list(object({ // A config block that triggers a lambda function with specific actions (maximum 4).
+      event_type   = string,
+      lambda_arn   = string,
+      include_body = bool // When set to true it exposes the request body to the lambda function.
+    })))
+    use_aws_managed_cache_policy          = bool,
+    cache_policy_name                     = string, // It can be custom or aws managed policy name , if custom cache_policies variable key should match
+    use_aws_managed_origin_request_policy = optional(bool),
+    origin_request_policy_name            = optional(string), // It can be custom or aws managed policy name , if custom origin_request_policies variable key should match
+    compress                              = bool,
+    viewer_protocol_policy                = string
+  }))
+  default = []
 }
 
 variable "cors_configuration" {
@@ -77,8 +118,8 @@ variable "geo_restriction" {
   }
 }
 
-variable "cache_policy" {
-  type = object(
+variable "cache_policies" {
+  type = map(object(
     {
       default_ttl = number,
       max_ttl     = number,
@@ -96,33 +137,38 @@ variable "cache_policy" {
         items                 = list(string)
       })
     }
-  )
-  description = "Origin request policy"
-  default = {
-    default_ttl = 86400,
-    max_ttl     = 31536000,
-    min_ttl     = 0,
-    cookies_config = {
-      cookie_behavior = "none",
-      items           = []
-    },
-    headers_config = {
-      header_behavior = "whitelist",
-      items           = ["Authorization", "Origin", "Accept", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Referer"]
-    },
-    query_string_behavior = {
-      header_behavior = "none",
-      items           = []
-    },
-    query_strings_config = {
-      query_string_behavior = "none",
-      items                 = []
-    }
-  }
+  ))
+  description = <<-EOT
+      Cache policies,
+		eg. {
+			"cache-policy-1" = {
+			default_ttl = 86400,
+			max_ttl     = 31536000,
+			min_ttl     = 0,
+			cookies_config = {
+				cookie_behavior = "none",
+				items           = []
+			},
+			headers_config = {
+				header_behavior = "whitelist",
+				items           = ["Authorization", "Origin", "Accept", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Referer"]
+			},
+			query_string_behavior = {
+				header_behavior = "none",
+				items           = []
+			},
+			query_strings_config = {
+				query_string_behavior = "none",
+				items                 = []
+			}
+		} }
+    EOT
+
+  default = {}
 }
 
-variable "origin_request_policy" {
-  type = object({
+variable "origin_request_policies" {
+  type = map(object({
     cookies_config = object({
       cookie_behavior = string
       items           = list(string)
@@ -135,24 +181,28 @@ variable "origin_request_policy" {
       query_string_behavior = string
       items                 = list(string)
     })
-  })
-  description = "Origin request policy"
-  default = {
-    cookies_config = {
-      cookie_behavior = "none",
-      items           = []
-    },
-    headers_config = {
-      header_behavior = "whitelist",
-      items = ["Accept", "Accept-Charset", "Accept-Datetime", "Accept-Language",
-        "Access-Control-Request-Method", "Access-Control-Request-Headers", "CloudFront-Forwarded-Proto", "CloudFront-Is-Android-Viewer",
-      "CloudFront-Is-Desktop-Viewer", "CloudFront-Is-IOS-Viewer"]
-    },
-    query_strings_config = {
-      query_string_behavior = "none",
-      items                 = []
-    }
-  }
+  }))
+  description = <<-EOT
+      Origin request policies,
+			eg. {
+		"origin-req-policy" = {
+		cookies_config = {
+			cookie_behavior = "none",
+			items           = []
+		},
+		headers_config = {
+			header_behavior = "whitelist",
+			items = ["Accept", "Accept-Charset", "Accept-Datetime", "Accept-Language",
+			"Access-Control-Request-Method", "Access-Control-Request-Headers", "CloudFront-Forwarded-Proto", "CloudFront-Is-Android-Viewer",
+			"CloudFront-Is-Desktop-Viewer", "CloudFront-Is-IOS-Viewer"]
+		},
+		query_strings_config = {
+			query_string_behavior = "none",
+			items                 = []
+		}
+	} }
+    EOT
+  default     = {}
 }
 
 
@@ -204,4 +254,15 @@ variable "route53_record_ttl" {
   type        = string
   description = "TTL for Route53 record"
   default     = 60
+}
+
+variable "custom_error_responses" {
+  type = list(object({
+    error_caching_min_ttl = optional(number),
+    error_code            = string,
+    response_code         = optional(string),
+    response_page_path    = optional(string) // eg:  /custom_404.html
+  }))
+  default     = []
+  description = "One or more custom error response elements"
 }
