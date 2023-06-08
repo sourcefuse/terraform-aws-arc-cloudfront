@@ -106,6 +106,7 @@ resource "aws_cloudfront_distribution" "this" {
   enabled             = true
   is_ipv6_enabled     = true
   default_root_object = var.default_root_object
+  price_class         = var.price_class
 
 
   dynamic "custom_error_response" {
@@ -166,7 +167,7 @@ resource "aws_cloudfront_distribution" "this" {
     iterator = i
 
     content {
-      path_pattern           = i.value.allowed_methods
+      path_pattern           = i.value.path_pattern
       allowed_methods        = i.value.allowed_methods
       cached_methods         = i.value.cached_methods
       target_origin_id       = local.origin_id
@@ -178,7 +179,7 @@ resource "aws_cloudfront_distribution" "this" {
 
 
       dynamic "lambda_function_association" {
-        for_each = {
+        for_each = i.value.lambda_function_association == null ? {} : {
           for index, function in i.value.lambda_function_association :
           function.event_type => function
         }
@@ -192,7 +193,7 @@ resource "aws_cloudfront_distribution" "this" {
       }
 
       dynamic "function_association" {
-        for_each = {
+        for_each = i.value.function_association == null ? {} : {
           for index, function in i.value.function_association :
           function.event_type => function
         }

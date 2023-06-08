@@ -266,3 +266,9 @@ variable "custom_error_responses" {
   default     = []
   description = "One or more custom error response elements"
 }
+
+variable "price_class" {
+  type        = string
+  default     = "PriceClass_All"
+  description = " Price class for this distribution. One of PriceClass_All, PriceClass_200, PriceClass_100."
+}

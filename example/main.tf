@@ -30,6 +30,11 @@ module "cloudfront" {
     cache_policy_name                     = "CachingOptimized"
     use_aws_managed_origin_request_policy = true
     origin_request_policy_name            = "CORS-S3Origin" // It can be custom or aws managed policy name , if custom origin_request_policies variable key should match
+    lambda_function_association = [{
+      event_type   = "viewer-request"
+      lambda_arn   = aws_lambda_function.this.qualified_arn
+      include_body = true
+    }]
 
   }
 
@@ -45,6 +50,13 @@ module "cloudfront" {
       cache_policy_name                     = "cache-policy-1" // Note: This has to match cache_polices mentioned below
       use_aws_managed_origin_request_policy = false
       origin_request_policy_name            = "origin-req-policy-1" // Note: This has to match origin_request_policies mentioned below
+
+      function_association = [
+        {
+          event_type   = "viewer-request"
+          function_arn = aws_cloudfront_function.this.arn
+        }
+      ]
     }
   ]
 
