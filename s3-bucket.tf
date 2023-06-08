@@ -15,7 +15,7 @@ module "kms" {
 }
 
 module "s3_bucket" {
-  source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.0.0"
+  source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.1.2"
 
   bucket_name = "${local.environment}-${var.bucket_name}"
   environment = local.environment
@@ -58,7 +58,7 @@ module "s3_bucket" {
 }
 
 module "s3_bucket_logs" {
-  source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.0.0"
+  source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.1.2"
 
   count = var.enable_logging ? 1 : 0
 

@@ -3,28 +3,30 @@ data "aws_partition" "this" {}
 data "aws_caller_identity" "this" {}
 
 resource "aws_cloudfront_cache_policy" "this" {
-  name        = "${local.environment}-${module.s3_bucket.bucket_id}-cache-policy"
+  for_each = var.cache_policies
+
+  name        = "${local.environment}-${each.key}-cache-policy"
   comment     = "Cache policy"
-  default_ttl = var.cache_policy.default_ttl
-  max_ttl     = var.cache_policy.max_ttl
-  min_ttl     = var.cache_policy.min_ttl
+  default_ttl = each.value.default_ttl
+  max_ttl     = each.value.max_ttl
+  min_ttl     = each.value.min_ttl
   parameters_in_cache_key_and_forwarded_to_origin {
     cookies_config {
-      cookie_behavior = var.cache_policy.cookies_config.cookie_behavior
+      cookie_behavior = each.value.cookies_config.cookie_behavior
       cookies {
-        items = var.cache_policy.cookies_config.items
+        items = each.value.cookies_config.items
       }
     }
     headers_config {
-      header_behavior = var.cache_policy.cookies_config.cookie_behavior
+      header_behavior = each.value.cookies_config.cookie_behavior
       headers {
-        items = var.cache_policy.cookies_config.items
+        items = each.value.cookies_config.items
       }
     }
     query_strings_config {
-      query_string_behavior = var.cache_policy.query_strings_config.query_string_behavior
+      query_string_behavior = each.value.query_strings_config.query_string_behavior
       query_strings {
-        items = var.cache_policy.query_strings_config.items
+        items = each.value.query_strings_config.items
       }
     }
   }
@@ -32,24 +34,26 @@ resource "aws_cloudfront_cache_policy" "this" {
 }
 
 resource "aws_cloudfront_origin_request_policy" "this" {
-  name    = "${local.environment}-${module.s3_bucket.bucket_id}-origin-request-policy"
+  for_each = var.origin_request_policies
+
+  name    = "${local.environment}-${each.key}-origin-request-policy"
   comment = "Origin request policy"
   cookies_config {
-    cookie_behavior = var.origin_request_policy.cookies_config.cookie_behavior
+    cookie_behavior = each.value.cookies_config.cookie_behavior
     cookies {
-      items = var.origin_request_policy.cookies_config.items
+      items = each.value.cookies_config.items
     }
   }
   headers_config {
-    header_behavior = var.origin_request_policy.headers_config.header_behavior
+    header_behavior = each.value.headers_config.header_behavior
     headers {
-      items = var.origin_request_policy.headers_config.items
+      items = each.value.headers_config.items
     }
   }
   query_strings_config {
-    query_string_behavior = var.origin_request_policy.query_strings_config.query_string_behavior
+    query_string_behavior = each.value.query_strings_config.query_string_behavior
     query_strings {
-      items = var.origin_request_policy.query_strings_config.items
+      items = each.value.query_strings_config.items
     }
   }
 }
@@ -101,27 +105,108 @@ resource "aws_cloudfront_distribution" "this" {
   comment             = var.description
   enabled             = true
   is_ipv6_enabled     = true
-  default_root_object = "index.html"
+  default_root_object = var.default_root_object
+  price_class         = var.price_class
 
-  dynamic "default_cache_behavior" {
-    for_each = [var.default_cache_behavior]
+
+  dynamic "custom_error_response" {
+    for_each = {
+      for index, err_resp in var.custom_error_responses :
+      err_resp.error_code => err_resp
+    }
     iterator = i
 
     content {
+      error_caching_min_ttl = lookup(i.value, "error_caching_min_ttl", 0)
+      error_code            = i.value.error_code
+      response_code         = lookup(i.value, "response_code", "")
+      response_page_path    = lookup(i.value, "response_page_path", "")
+    }
+  }
+
+
+  default_cache_behavior {
+    allowed_methods        = var.default_cache_behavior.allowed_methods
+    cached_methods         = var.default_cache_behavior.cached_methods
+    target_origin_id       = local.origin_id
+    compress               = lookup(var.default_cache_behavior, "compress", false)
+    viewer_protocol_policy = var.default_cache_behavior.viewer_protocol_policy
+
+    cache_policy_id          = var.default_cache_behavior.use_aws_managed_cache_policy ? local.managed_cache_policies[var.default_cache_behavior.cache_policy_name] : aws_cloudfront_cache_policy.this[var.default_cache_behavior.cache_policy_name].id
+    origin_request_policy_id = var.default_cache_behavior.use_aws_managed_origin_request_policy ? local.managed_origin_request_policies[var.default_cache_behavior.origin_request_policy_name] : (var.default_cache_behavior.origin_request_policy_name == null ? null : aws_cloudfront_origin_request_policy.this[var.default_cache_behavior.origin_request_policy_name].id)
+
+
+    dynamic "lambda_function_association" {
+      for_each = var.default_cache_behavior.lambda_function_association == null ? [] : var.default_cache_behavior.lambda_function_association
+      iterator = i
+
+      content {
+        event_type   = i.value.event_type
+        lambda_arn   = i.value.lambda_arn
+        include_body = i.value.include_body
+      }
+    }
+
+    dynamic "function_association" {
+      for_each = var.default_cache_behavior.function_association == null ? [] : var.default_cache_behavior.function_association
+      iterator = i
+
+      content {
+        event_type   = i.value.event_type
+        function_arn = i.value.function_arn
+      }
+    }
+  }
+
+  dynamic "ordered_cache_behavior" {
+    for_each = {
+      for index, cache in var.cache_behaviors :
+      cache.path_pattern => cache
+    }
+
+    iterator = i
+
+    content {
+      path_pattern           = i.value.path_pattern
       allowed_methods        = i.value.allowed_methods
       cached_methods         = i.value.cached_methods
       target_origin_id       = local.origin_id
       compress               = lookup(i.value, "compress", false)
       viewer_protocol_policy = i.value.viewer_protocol_policy
-      min_ttl                = lookup(i.value, "min_ttl", 0)
-      default_ttl            = lookup(i.value, "default_ttl", 3600)
-      max_ttl                = lookup(i.value, "max_ttl", 86400)
 
-      cache_policy_id          = aws_cloudfront_cache_policy.this.id
-      origin_request_policy_id = aws_cloudfront_origin_request_policy.this.id
+      cache_policy_id          = i.value.use_aws_managed_cache_policy ? local.managed_cache_policies[i.value.cache_policy_name] : aws_cloudfront_cache_policy.this[i.value.cache_policy_name].id
+      origin_request_policy_id = i.value.use_aws_managed_origin_request_policy ? local.managed_origin_request_policies[i.value.origin_request_policy_name] : (i.value.origin_request_policy_name == null ? null : aws_cloudfront_origin_request_policy.this[i.value.origin_request_policy_name].id)
 
+
+      dynamic "lambda_function_association" {
+        for_each = i.value.lambda_function_association == null ? {} : {
+          for index, function in i.value.lambda_function_association :
+          function.event_type => function
+        }
+        iterator = j
+
+        content {
+          event_type   = j.value.event_type
+          lambda_arn   = j.value.lambda_arn
+          include_body = j.value.include_body
+        }
+      }
+
+      dynamic "function_association" {
+        for_each = i.value.function_association == null ? {} : {
+          for index, function in i.value.function_association :
+          function.event_type => function
+        }
+        iterator = j
+
+        content {
+          event_type   = j.value.event_type
+          function_arn = j.value.function_arn
+        }
+      }
     }
   }
+
 
   aliases = var.aliases
 
