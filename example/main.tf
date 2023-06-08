@@ -67,7 +67,7 @@ module "cloudfront" {
   }
 
   acm_details = {
-    domain_name               = "cf.sfrefarch.com",
+    domain_name               = "*.sfrefarch.com",
     subject_alternative_names = ["www.cf.sfrefarch.com"]
   }
 
