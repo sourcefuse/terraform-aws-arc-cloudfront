@@ -222,13 +222,17 @@ variable "viewer_certificate" {
 
 variable "s3_kms_details" {
   type = object({
-    kms_key_administrators = list(string), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
-    kms_key_users          = list(string), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
+    s3_bucket_encryption_type = string,                 //Encryption for S3 bucket , options : SSE-S3 - AES256 , SSE-KMS - aws:kms
+    kms_key_administrators    = optional(list(string)), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
+    kms_key_users             = optional(list(string)), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
+    kms_key_arn               = optional(string)        // In case if we need to use CMK created else where, set as null if not used
   })
   description = "KMS details for S3 encryption"
   default = {
-    kms_key_administrators = [],
-    kms_key_users          = []
+    s3_bucket_encryption_type = "SSE-S3"
+    kms_key_administrators    = [],
+    kms_key_users             = [],
+    kms_key_arn               = null
   }
 }
 
@@ -243,10 +247,16 @@ variable "acm_details" {
     domain_name               = string,
     subject_alternative_names = list(string),
   })
-  description = "Details required for creating certificate"
+  description = <<-EOT
+  	Details required for creating certificate
+	eg. {
+			domain_name               = "test.com",
+			subject_alternative_names = ["www.test.com"]
+		}
+  EOT
   default = {
-    domain_name               = "test.com",
-    subject_alternative_names = ["www.test.com"]
+    domain_name               = "",
+    subject_alternative_names = []
   }
 }
 

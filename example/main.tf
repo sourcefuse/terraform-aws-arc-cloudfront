@@ -17,7 +17,7 @@ module "cloudfront" {
   description            = "This is a test Cloudfront distribution"
   route53_root_domain    = "sfrefarch.com" // Used to fetch the Hosted Zone
   create_route53_records = var.create_route53_records
-  aliases                = ["cf.sfrefarch.com", "www.cf.sfrefarch.com"]
+  aliases                = ["cf.sfrefarch.com", "www.cf.sfrefarch.com", "test.sfrefarch.com", "*.sfrefarch.com", "test1.sfrefarch.com"]
   enable_logging         = var.enable_logging // Create a new S3 bucket for storing Cloudfront logs
 
   default_cache_behavior = {
@@ -67,7 +67,7 @@ module "cloudfront" {
   }
 
   acm_details = {
-    domain_name               = "cf.sfrefarch.com",
+    domain_name               = "*.sfrefarch.com",
     subject_alternative_names = ["www.cf.sfrefarch.com"]
   }
 
@@ -121,8 +121,10 @@ module "cloudfront" {
   }]
 
   s3_kms_details = {
-    kms_key_administrators = [],
-    kms_key_users          = ["arn:aws:iam::757583164619:role/sourcefuse-poc-2-admin-role"] // Note :- Add users/roles who wanted to read/write to S3 bucket
+    s3_bucket_encryption_type = "SSE-S3", //Encryption for S3 bucket , options : `SSE-S3` , `SSE-KMS`
+    kms_key_administrators    = [],
+    kms_key_users             = [], // Note :- Add users/roles who wanted to read/write to S3 bucket
+    kms_key_arn               = null
   }
 
   tags = module.tags.tags

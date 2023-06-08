@@ -4,7 +4,7 @@
 ##################################################################################
 
 resource "aws_acm_certificate" "this" {
-  count                     = var.create_route53_records ? 1 : 0
+  count                     = var.acm_details.domain_name == "" ? 0 : 1
   domain_name               = var.acm_details.domain_name
   validation_method         = "DNS"
   subject_alternative_names = var.acm_details.subject_alternative_names
@@ -19,6 +19,7 @@ data "aws_route53_zone" "this" {
   private_zone = false
 }
 
+# Create CNAME for validating ACM certificate
 resource "aws_route53_record" "this" {
   for_each = var.create_route53_records ? {
     for dvo in aws_acm_certificate.this[0].domain_validation_options : dvo.domain_name => {
@@ -38,7 +39,7 @@ resource "aws_route53_record" "this" {
 
 
 resource "aws_acm_certificate_validation" "this" {
-  count                   = var.create_route53_records ? 1 : 0
+  count                   = var.acm_details.domain_name == "" ? 0 : 1
   certificate_arn         = aws_acm_certificate.this[0].arn
   validation_record_fqdns = [for record in aws_route53_record.this : record.fqdn]
 
@@ -47,9 +48,9 @@ resource "aws_acm_certificate_validation" "this" {
 
 // Create route53 record for domains in Cloudfront aliases
 resource "aws_route53_record" "root_domain" {
-  count   = var.create_route53_records ? length(var.aliases) : 0
+  count   = var.create_route53_records ? length(local.aliases) : 0
   zone_id = data.aws_route53_zone.this[0].zone_id
-  name    = var.aliases[count.index]
+  name    = local.aliases[count.index]
   type    = "A"
 
   alias {
