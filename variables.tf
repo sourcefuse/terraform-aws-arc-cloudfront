@@ -243,10 +243,16 @@ variable "acm_details" {
     domain_name               = string,
     subject_alternative_names = list(string),
   })
-  description = "Details required for creating certificate"
+  description = <<-EOT
+  	Details required for creating certificate
+	eg. {
+			domain_name               = "test.com",
+			subject_alternative_names = ["www.test.com"]
+		}
+  EOT
   default = {
-    domain_name               = "test.com",
-    subject_alternative_names = ["www.test.com"]
+    domain_name               = "",
+    subject_alternative_names = []
   }
 }
 
