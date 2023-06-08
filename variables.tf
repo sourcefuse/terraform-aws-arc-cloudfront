@@ -272,3 +272,13 @@ variable "price_class" {
   default     = "PriceClass_All"
   description = " Price class for this distribution. One of PriceClass_All, PriceClass_200, PriceClass_100."
 }
+
+variable "s3_bucket_encryption_type" {
+  type        = string
+  default     = "SSE-S3"
+  description = <<-EOT
+  Encryption for S3 bucket , options :
+  	SSE-S3 - AES256
+	SSE-KM - aws:kms
+  EOT
+}

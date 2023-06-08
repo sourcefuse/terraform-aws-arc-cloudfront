@@ -4,6 +4,8 @@
 
 // Module creates KMS and its related resources
 module "kms" {
+  count = var.s3_bucket_encryption_type == "SSE-KMS" ? 1 : 0
+
   source                  = "./modules/kms"
   environment             = local.environment
   alias                   = "${local.environment}/s3/${var.bucket_name}"
@@ -24,9 +26,9 @@ module "s3_bucket" {
   enabled            = true
   acl                = "private"
   versioning_enabled = true
-  bucket_key_enabled = true
-  kms_master_key_arn = module.kms.key_arn
-  sse_algorithm      = "aws:kms"
+  bucket_key_enabled = var.s3_bucket_encryption_type == "SSE-KMS" ? true : false
+  kms_master_key_arn = var.s3_bucket_encryption_type == "SSE-S3" ? "" : module.kms[0].key_arn
+  sse_algorithm      = var.s3_bucket_encryption_type == "SSE-S3" ? "AES256" : "aws:kms"
 
   policy = jsonencode({
     Version = "2012-10-17",
@@ -68,9 +70,9 @@ module "s3_bucket_logs" {
 
   acl                = "log-delivery-write"
   versioning_enabled = false
-  bucket_key_enabled = true
-  kms_master_key_arn = module.kms.key_arn
-  sse_algorithm      = "aws:kms"
+  bucket_key_enabled = var.s3_bucket_encryption_type == "SSE-KMS" ? true : false
+  kms_master_key_arn = var.s3_bucket_encryption_type == "SSE-S3" ? "" : module.kms[0].key_arn
+  sse_algorithm      = var.s3_bucket_encryption_type == "SSE-S3" ? "AES256" : "aws:kms"
 
   policy = jsonencode({
     Version = "2012-10-17",
