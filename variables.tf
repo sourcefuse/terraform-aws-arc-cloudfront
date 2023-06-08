@@ -222,13 +222,17 @@ variable "viewer_certificate" {
 
 variable "s3_kms_details" {
   type = object({
-    kms_key_administrators = list(string), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
-    kms_key_users          = list(string), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
+    s3_bucket_encryption_type = string,                 //Encryption for S3 bucket , options : SSE-S3 - AES256 , SSE-KMS - aws:kms
+    kms_key_administrators    = optional(list(string)), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
+    kms_key_users             = optional(list(string)), // "Environment where deploying,List of AWS arns that will have permissions to use kms key"
+    kms_key_arn               = optional(string)        // In case if we need to use CMK created else where, set as null if not used
   })
   description = "KMS details for S3 encryption"
   default = {
-    kms_key_administrators = [],
-    kms_key_users          = []
+    s3_bucket_encryption_type = "SSE-S3"
+    kms_key_administrators    = [],
+    kms_key_users             = [],
+    kms_key_arn               = null
   }
 }
 
@@ -277,14 +281,4 @@ variable "price_class" {
   type        = string
   default     = "PriceClass_All"
   description = " Price class for this distribution. One of PriceClass_All, PriceClass_200, PriceClass_100."
-}
-
-variable "s3_bucket_encryption_type" {
-  type        = string
-  default     = "SSE-S3"
-  description = <<-EOT
-  Encryption for S3 bucket , options :
-  	SSE-S3 - AES256
-	SSE-KM - aws:kms
-  EOT
 }
