@@ -16,10 +16,17 @@ module "kms" {
   tags                    = var.tags
 }
 
+data "aws_s3_bucket" "origin" {
+  count  = var.create_bucket ? 0 : 1
+  bucket = var.bucket_name
+}
+
 module "s3_bucket" {
   source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.1.2"
 
-  bucket_name = "${local.environment}-${var.bucket_name}"
+  count = var.create_bucket ? 1 : 0
+
+  bucket_name = var.bucket_name
   environment = local.environment
   namespace   = var.namespace
 

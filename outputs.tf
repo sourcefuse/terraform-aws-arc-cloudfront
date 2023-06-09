@@ -1,5 +1,5 @@
 output "origin_s3_bucket" {
-  value       = module.s3_bucket.bucket_id
+  value       = var.create_bucket ? module.s3_bucket[0].bucket_id : data.aws_s3_bucket.origin[0].id
   description = "Origin bucket name"
 }
 

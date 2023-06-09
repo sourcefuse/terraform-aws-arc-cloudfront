@@ -93,7 +93,6 @@ variable "tags" {
   default     = {}
 }
 
-
 variable "namespace" {
   type        = string
   description = "Namespace for the resources."
@@ -281,4 +280,16 @@ variable "price_class" {
   type        = string
   default     = "PriceClass_All"
   description = " Price class for this distribution. One of PriceClass_All, PriceClass_200, PriceClass_100."
+}
+
+variable "create_bucket" {
+  type        = bool
+  description = "Whether to create new bucket or use existing one"
+  default     = true
+}
+
+variable "origin_access_control_id" {
+  type        = string
+  description = "Unique text for origin_access_control , to be used when same bucket is used in multiple distributions"
+  default     = "1"
 }
