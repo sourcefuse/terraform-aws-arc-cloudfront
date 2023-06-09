@@ -60,7 +60,7 @@ resource "aws_cloudfront_origin_request_policy" "this" {
 
 
 resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
-  bucket = module.s3_bucket.bucket_id
+  bucket = var.create_bucket ? module.s3_bucket[0].bucket_id : data.aws_s3_bucket.origin[0].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -72,7 +72,7 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = "${module.s3_bucket.bucket_arn}/*"
+        Resource = var.create_bucket ? "${module.s3_bucket[0].bucket_arn}/*" : "${data.aws_s3_bucket.origin[0].arn}/*"
         Condition = {
           StringEquals = {
             "aws:SourceArn" = aws_cloudfront_distribution.this.arn
@@ -88,7 +88,7 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
 ##################################################################################
 
 resource "aws_cloudfront_origin_access_control" "this" {
-  name                              = "${local.environment}-${module.s3_bucket.bucket_regional_domain_name}"
+  name                              = local.origin_access_control_name
   description                       = "Origin access control"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -97,7 +97,7 @@ resource "aws_cloudfront_origin_access_control" "this" {
 
 resource "aws_cloudfront_distribution" "this" {
   origin {
-    domain_name              = module.s3_bucket.bucket_regional_domain_name
+    domain_name              = local.domain_name
     origin_id                = local.origin_id
     origin_access_control_id = aws_cloudfront_origin_access_control.this.id
   }

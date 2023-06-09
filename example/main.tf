@@ -12,13 +12,15 @@ module "tags" {
 module "cloudfront" {
   source = "../"
 
-  bucket_name            = "test-cloudfront-arc"
-  namespace              = "test"
-  description            = "This is a test Cloudfront distribution"
-  route53_root_domain    = "sfrefarch.com" // Used to fetch the Hosted Zone
-  create_route53_records = var.create_route53_records
-  aliases                = ["cf.sfrefarch.com", "www.cf.sfrefarch.com", "test.sfrefarch.com", "*.sfrefarch.com", "test1.sfrefarch.com"]
-  enable_logging         = var.enable_logging // Create a new S3 bucket for storing Cloudfront logs
+  bucket_name              = "cloudfront-arc"
+  create_bucket            = false
+  namespace                = "test"
+  description              = "This is a test Cloudfront distribution"
+  route53_root_domain      = "sfrefarch.com" // Used to fetch the Hosted Zone
+  create_route53_records   = var.create_route53_records
+  aliases                  = ["cf.sfrefarch.com", "www.cf.sfrefarch.com", "test.sfrefarch.com", "*.sfrefarch.com", "test1.sfrefarch.com"]
+  enable_logging           = var.enable_logging // Create a new S3 bucket for storing Cloudfront logs
+  origin_access_control_id = "1"                // "Unique text for origin_access_control , to be used when same bucket is used in multiple distributions"
 
   default_cache_behavior = {
     allowed_methods        = ["GET", "HEAD"]
@@ -30,11 +32,11 @@ module "cloudfront" {
     cache_policy_name                     = "CachingOptimized"
     use_aws_managed_origin_request_policy = true
     origin_request_policy_name            = "CORS-S3Origin" // It can be custom or aws managed policy name , if custom origin_request_policies variable key should match
-    # lambda_function_association = [{
-    #   event_type   = "viewer-request"
-    #   lambda_arn   = aws_lambda_function.this.qualified_arn
-    #   include_body = true
-    # }]
+    lambda_function_association = [{
+      event_type   = "viewer-request"
+      lambda_arn   = aws_lambda_function.this.qualified_arn
+      include_body = true
+    }]
 
   }
 
