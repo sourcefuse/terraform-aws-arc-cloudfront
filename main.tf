@@ -88,7 +88,7 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
 ##################################################################################
 
 resource "aws_cloudfront_origin_access_control" "this" {
-  name                              = "${local.environment}-cf-origin-access-control"
+  name                              = "${local.environment}-${module.s3_bucket.bucket_regional_domain_name}"
   description                       = "Origin access control"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
