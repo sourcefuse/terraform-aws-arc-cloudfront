@@ -3,6 +3,43 @@ variable "aliases" {
   type        = list(string)
 }
 
+variable "logging_bucket" {
+  description = "S3 bucket used for storing logs"
+  type        = string
+  default     = null
+}
+
+variable "origins" {
+  type = list(object({
+    origin_type         = string // S3 or custom origin
+    origin_id           = string
+    origin_path         = optional(string)
+    domain_name         = string
+    bucket_name         = optional(string) // required of origin is S3
+    create_bucket       = bool             // required of origin is S3
+    connection_attempts = optional(number, 3)
+    connection_timeout  = optional(number, 10)
+    cors_configuration  = optional(any) // cors for S3
+    origin_shield = optional(object({
+      enabled              = bool
+      origin_shield_region = string
+      }), {
+      enabled              = false
+      origin_shield_region = null
+    })
+    custom_origin_config = optional(object({
+      http_port                = number
+      https_port               = number
+      origin_protocol_policy   = string
+      origin_ssl_protocols     = list(string)
+      origin_keepalive_timeout = optional(number, 5)
+      origin_read_timeout      = optional(number, 30)
+    }))
+  }))
+  description = "List of Origins for Cloudfront"
+  default     = []
+}
+
 variable "default_root_object" {
   type        = string
   default     = "index.html"
@@ -23,6 +60,7 @@ variable "route53_root_domain" {
 variable "default_cache_behavior" {
   description = "Default cache behavior for the distribution"
   type = object({
+    origin_id       = string // should be same as what is given in origins
     allowed_methods = list(string)
     cached_methods  = list(string)
     function_association = optional(list(object({ // A config block that triggers a lambda function with specific actions (maximum 4).
@@ -46,6 +84,7 @@ variable "default_cache_behavior" {
 variable "cache_behaviors" {
   description = "Set the cache behaviors for the distribution , Note:-  You cannot use an origin request policy in a cache behavior without a cache policy."
   type = list(object({
+    origin_id       = string // should be same as what is given in origins
     path_pattern    = string
     allowed_methods = list(string)
     cached_methods  = list(string)
@@ -79,12 +118,6 @@ variable "cors_configuration" {
   default = null
 
   description = "Specifies the allowed headers, methods, origins and exposed headers when using CORS on this bucket"
-}
-
-variable "bucket_name" {
-  type        = string
-  default     = null
-  description = "Bucket name. If provided, the bucket will be created with this name instead of generating the name from the context"
 }
 
 variable "tags" {
@@ -282,14 +315,14 @@ variable "price_class" {
   description = " Price class for this distribution. One of PriceClass_All, PriceClass_200, PriceClass_100."
 }
 
-variable "create_bucket" {
-  type        = bool
-  description = "Whether to create new bucket or use existing one"
-  default     = true
+variable "web_acl_id" {
+  type        = string
+  default     = null
+  description = " Unique identifier that specifies the AWS WAF web ACL, if any, to associate with this distribution. To specify a web ACL created using the latest version of AWS WAF (WAFv2), use the ACL ARN, for example aws_wafv2_web_acl.example.arn."
 }
 
-variable "origin_access_control_id" {
-  type        = string
-  description = "Unique text for origin_access_control , to be used when same bucket is used in multiple distributions"
-  default     = "1"
+variable "retain_on_delete" {
+  type        = bool
+  default     = false
+  description = "Disables the distribution instead of deleting it when destroying the resource through Terraform. If this is set, the distribution needs to be deleted manually afterwards. "
 }
