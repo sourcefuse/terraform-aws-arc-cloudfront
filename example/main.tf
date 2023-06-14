@@ -27,7 +27,6 @@ module "cloudfront" {
 
     }
   ]
-  //source = "git::https://github.com/sourcefuse/terraform-aws-refarch-cloudfront?ref=2.0.2"
 
   namespace              = "test"
   description            = "This is a test Cloudfront distribution"
