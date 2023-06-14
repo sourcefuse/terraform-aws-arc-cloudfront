@@ -28,7 +28,7 @@ module "cloudfront" {
   origins = [{
     origin_type   = "custom",
     origin_id     = "cloudfront-arc",
-    domain_name   = "flxpointdev.wpengine.com",
+    domain_name   = "test.wpengine.com",
     bucket_name   = "",
     create_bucket = false,
     custom_origin_config = {
