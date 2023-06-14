@@ -8,7 +8,7 @@ module "kms" {
 
   source                  = "./modules/kms"
   environment             = local.environment
-  alias                   = "${local.environment}/s3/${var.bucket_name}"
+  alias                   = "${local.environment}/s3/${var.logging_bucket}"
   kms_key_administrators  = var.s3_kms_details.kms_key_administrators
   kms_key_users           = var.s3_kms_details.kms_key_users
   deletion_window_in_days = 7
@@ -17,16 +17,24 @@ module "kms" {
 }
 
 data "aws_s3_bucket" "origin" {
-  count  = var.create_bucket ? 0 : 1
-  bucket = var.bucket_name
+  for_each = {
+    for index, origin in var.origins : origin.origin_id => origin
+    if origin.create_bucket == false && origin.origin_type == "s3"
+  }
+  bucket = each.value.bucket_name
 }
 
 module "s3_bucket" {
   source = "git::https://github.com/cloudposse/terraform-aws-s3-bucket?ref=3.1.2"
 
-  count = var.create_bucket ? 1 : 0
+  for_each = {
+    for index, origin in var.origins : origin.origin_id => origin
+    if origin.create_bucket == true && origin.origin_type == "s3"
+  }
 
-  bucket_name = var.bucket_name
+  //count = var.create_bucket ? 1 : 0
+
+  bucket_name = each.value.bucket_name
   environment = local.environment
   namespace   = var.namespace
 
@@ -71,7 +79,7 @@ module "s3_bucket_logs" {
 
   count = var.enable_logging ? 1 : 0
 
-  bucket_name = "${local.environment}-${var.bucket_name}-logging"
+  bucket_name = "${var.logging_bucket}-logging"
   environment = local.environment
   namespace   = var.namespace
 

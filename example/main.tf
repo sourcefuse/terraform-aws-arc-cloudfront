@@ -12,17 +12,31 @@ module "tags" {
 module "cloudfront" {
   source = "../"
 
-  bucket_name              = "cloudfront-arc"
-  create_bucket            = false
-  namespace                = "test"
-  description              = "This is a test Cloudfront distribution"
-  route53_root_domain      = "sfrefarch.com" // Used to fetch the Hosted Zone
-  create_route53_records   = var.create_route53_records
-  aliases                  = ["cf.sfrefarch.com", "www.cf.sfrefarch.com", "test.sfrefarch.com", "*.sfrefarch.com", "test1.sfrefarch.com"]
-  enable_logging           = var.enable_logging // Create a new S3 bucket for storing Cloudfront logs
-  origin_access_control_id = "1"                // "Unique text for origin_access_control , to be used when same bucket is used in multiple distributions"
+  origins = [{
+    origin_type   = "custom",
+    origin_id     = "cloudfront-arc",
+    domain_name   = "test.wpengine.com",
+    bucket_name   = "",
+    create_bucket = false,
+    custom_origin_config = {
+      http_port              = 80
+      https_port             = 443
+      origin_protocol_policy = "match-viewer"
+      origin_ssl_protocols   = ["TLSv1"]
+    }
+
+    }
+  ]
+
+  namespace              = "test"
+  description            = "This is a test Cloudfront distribution"
+  route53_root_domain    = "sfrefarch.com" // Used to fetch the Hosted Zone
+  create_route53_records = var.create_route53_records
+  aliases                = ["cf.sfrefarch.com", "www.cf.sfrefarch.com", "test.sfrefarch.com", "*.sfrefarch.com", "test1.sfrefarch.com"]
+  enable_logging         = var.enable_logging // Create a new S3 bucket for storing Cloudfront logs
 
   default_cache_behavior = {
+    origin_id              = "cloudfront-arc",
     allowed_methods        = ["GET", "HEAD"]
     cached_methods         = ["GET", "HEAD"]
     compress               = false
@@ -42,6 +56,7 @@ module "cloudfront" {
 
   cache_behaviors = [
     {
+      origin_id              = "cloudfront-arc",
       path_pattern           = "/content/immutable/*"
       allowed_methods        = ["GET", "HEAD"]
       cached_methods         = ["GET", "HEAD"]

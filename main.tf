@@ -18,9 +18,9 @@ resource "aws_cloudfront_cache_policy" "this" {
       }
     }
     headers_config {
-      header_behavior = each.value.cookies_config.cookie_behavior
+      header_behavior = each.value.headers_config.header_behavior
       headers {
-        items = each.value.cookies_config.items
+        items = each.value.headers_config.items
       }
     }
     query_strings_config {
@@ -60,7 +60,12 @@ resource "aws_cloudfront_origin_request_policy" "this" {
 
 
 resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
-  bucket = var.create_bucket ? module.s3_bucket[0].bucket_id : data.aws_s3_bucket.origin[0].id
+  for_each = {
+    for index, origin in var.origins : origin.origin_id => origin
+    if origin.origin_type == "s3"
+  }
+
+  bucket = each.value.create_bucket ? module.s3_bucket[each.value.origin_id].bucket_id : data.aws_s3_bucket.origin[each.value.origin_id].id
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -72,7 +77,7 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = var.create_bucket ? "${module.s3_bucket[0].bucket_arn}/*" : "${data.aws_s3_bucket.origin[0].arn}/*"
+        Resource = each.value.create_bucket ? "${module.s3_bucket[each.value.origin_id].bucket_arn}/*" : "${data.aws_s3_bucket.origin[each.value.origin_id].arn}/*"
         Condition = {
           StringEquals = {
             "aws:SourceArn" = aws_cloudfront_distribution.this.arn
@@ -87,8 +92,21 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
 # CDN #
 ##################################################################################
 
-resource "aws_cloudfront_origin_access_control" "this" {
-  name                              = local.origin_access_control_name
+# resource "aws_cloudfront_origin_access_control" "this" {
+#   name                              = local.origin_access_control_name
+#   description                       = "Origin access control"
+#   origin_access_control_origin_type = "s3"
+#   signing_behavior                  = "always"
+#   signing_protocol                  = "sigv4"
+# }
+
+resource "aws_cloudfront_origin_access_control" "s3" {
+  for_each = {
+    for index, origin in var.origins : origin.origin_id => origin
+    if origin.origin_type == "s3"
+  }
+
+  name                              = each.value.origin_id
   description                       = "Origin access control"
   origin_access_control_origin_type = "s3"
   signing_behavior                  = "always"
@@ -96,10 +114,43 @@ resource "aws_cloudfront_origin_access_control" "this" {
 }
 
 resource "aws_cloudfront_distribution" "this" {
-  origin {
-    domain_name              = local.domain_name
-    origin_id                = local.origin_id
-    origin_access_control_id = aws_cloudfront_origin_access_control.this.id
+  dynamic "origin" {
+    for_each = {
+      for index, origin in var.origins :
+      origin.origin_id => origin
+    }
+    iterator = i
+
+    content {
+      domain_name              = i.value.origin_type == "s3" ? (i.value.create_bucket ? module.s3_bucket[i.value.origin_id].bucket_regional_domain_name : data.aws_s3_bucket.origin[i.value.origin_id].bucket_regional_domain_name) : i.value.domain_name
+      origin_id                = i.value.origin_id
+      origin_access_control_id = i.value.origin_type == "s3" ? aws_cloudfront_origin_access_control.s3[i.value.origin_id].id : null
+
+      connection_attempts = i.value.connection_attempts
+      connection_timeout  = i.value.connection_timeout
+
+      dynamic "custom_origin_config" {
+        for_each = i.value.custom_origin_config == null ? [] : [1]
+
+        content {
+          http_port                = i.value.custom_origin_config.http_port
+          https_port               = i.value.custom_origin_config.https_port
+          origin_protocol_policy   = i.value.custom_origin_config.origin_protocol_policy
+          origin_ssl_protocols     = i.value.custom_origin_config.origin_ssl_protocols
+          origin_keepalive_timeout = i.value.custom_origin_config.origin_keepalive_timeout
+          origin_read_timeout      = i.value.custom_origin_config.origin_read_timeout
+        }
+      }
+
+      dynamic "origin_shield" {
+        for_each = try(i.value.custom_origin_config.enabled, null) == null || try(i.value.custom_origin_config.enabled, null) == false ? [] : [1]
+
+        content {
+          enabled              = try(i.value.custom_origin_config.enabled, null)
+          origin_shield_region = try(i.value.custom_origin_config.origin_shield_region, null)
+        }
+      }
+    }
   }
 
   comment             = var.description
@@ -128,7 +179,7 @@ resource "aws_cloudfront_distribution" "this" {
   default_cache_behavior {
     allowed_methods        = var.default_cache_behavior.allowed_methods
     cached_methods         = var.default_cache_behavior.cached_methods
-    target_origin_id       = local.origin_id
+    target_origin_id       = var.default_cache_behavior.origin_id
     compress               = lookup(var.default_cache_behavior, "compress", false)
     viewer_protocol_policy = var.default_cache_behavior.viewer_protocol_policy
 
@@ -170,7 +221,7 @@ resource "aws_cloudfront_distribution" "this" {
       path_pattern           = i.value.path_pattern
       allowed_methods        = i.value.allowed_methods
       cached_methods         = i.value.cached_methods
-      target_origin_id       = local.origin_id
+      target_origin_id       = i.value.origin_id
       compress               = lookup(i.value, "compress", false)
       viewer_protocol_policy = i.value.viewer_protocol_policy
 
@@ -234,7 +285,6 @@ resource "aws_cloudfront_distribution" "this" {
     ssl_support_method             = var.viewer_certificate.ssl_support_method
   }
 
-  tags = var.tags
-
-  depends_on = [aws_cloudfront_origin_access_control.this]
+  web_acl_id       = var.web_acl_id
+  retain_on_delete = var.retain_on_delete
 }
