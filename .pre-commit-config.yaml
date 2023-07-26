@@ -22,7 +22,8 @@ repos:
     rev: v1.77.1
     hooks:
       - id: terraform_validate
-      # - id: terraform_tflint TODO: enable it after fixing "Error: Optional object type attributes are experimental"
+        files: example/
+      - id: terraform_tflint
       - id: terraform_fmt
         args:
           - --args=-recursive
