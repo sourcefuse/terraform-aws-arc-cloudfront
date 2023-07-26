@@ -12,6 +12,10 @@ module "tags" {
 module "cloudfront" {
   source = "../"
 
+  providers = {
+    aws.acm = aws.acm
+  }
+
   origins = [{
     origin_type   = "custom",
     origin_id     = "cloudfront-arc",

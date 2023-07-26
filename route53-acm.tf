@@ -8,6 +8,7 @@ resource "aws_acm_certificate" "this" {
   domain_name               = var.acm_details.domain_name
   validation_method         = "DNS"
   subject_alternative_names = var.acm_details.subject_alternative_names
+  provider                  = aws.acm
 
   tags = var.tags
 }
@@ -42,6 +43,7 @@ resource "aws_acm_certificate_validation" "this" {
   count                   = var.acm_details.domain_name == "" ? 0 : 1
   certificate_arn         = aws_acm_certificate.this[0].arn
   validation_record_fqdns = [for record in aws_route53_record.this : record.fqdn]
+  provider                = aws.acm
 
   depends_on = [aws_route53_record.this]
 }
