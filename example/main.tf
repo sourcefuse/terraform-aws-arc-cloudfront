@@ -1,5 +1,6 @@
 module "tags" {
-  source = "git::https://github.com/sourcefuse/terraform-aws-refarch-tags?ref=1.1.0"
+  source  = "sourcefuse/arc-tags/aws"
+  version = "1.2.3"
 
   environment = "dev"
   project     = "test"
@@ -10,7 +11,8 @@ module "tags" {
 }
 
 module "cloudfront" {
-  source = "../"
+  source  = "sourcefuse/arc-cloudfront/aws"
+  version = "4.0.1"
 
   providers = {
     aws.acm = aws.acm
