@@ -1,52 +1,58 @@
-<!-- BEGIN_TF_DOCS -->
+<!-- BEGINNING OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
 ## Requirements
 
 | Name | Version |
 |------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0, < 2.0.0 |
+| <a name="requirement_archive"></a> [archive](#requirement\_archive) | 2.4.0 |
 | <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 4.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 4.18.0 |
+| <a name="provider_archive"></a> [archive](#provider\_archive) | 2.4.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 4.67.0 |
+| <a name="provider_aws.lambda_at_edge"></a> [aws.lambda\_at\_edge](#provider\_aws.lambda\_at\_edge) | 4.67.0 |
 
 ## Modules
 
-No modules.
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | sourcefuse/arc-cloudfront/aws | 4.0.1 |
+| <a name="module_tags"></a> [tags](#module\_tags) | sourcefuse/arc-tags/aws | 1.2.3 |
 
 ## Resources
 
 | Name | Type |
 |------|------|
-| [aws_cloudfront_distribution.distribution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_distribution) | resource |
-| [aws_cloudfront_origin_access_identity.origin_access_identity](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_origin_access_identity) | resource |
-| [aws_route53_record.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/route53_record) | resource |
-| [aws_s3_bucket.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket) | resource |
-| [aws_s3_bucket_acl.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_acl) | resource |
-| [aws_s3_bucket_policy.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_policy) | resource |
-| [aws_s3_bucket_website_configuration.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_bucket_website_configuration) | resource |
-| [aws_s3_object.object-upload-html](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
+| [aws_cloudfront_function.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudfront_function) | resource |
+| [aws_cloudwatch_log_group.log_group](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/cloudwatch_log_group) | resource |
+| [aws_iam_role.lambda_at_edge](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy.logs_role_policy](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy) | resource |
+| [aws_lambda_function.this](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function) | resource |
+| [aws_lambda_permission.allow_cloudfront](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [archive_file.this](https://registry.terraform.io/providers/hashicorp/archive/2.4.0/docs/data-sources/file) | data source |
+| [aws_iam_policy_document.assume_role](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
+| [aws_iam_policy_document.lambda_logs_policy_doc](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/iam_policy_document) | data source |
 
 ## Inputs
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
-| <a name="input_certificate_arn"></a> [certificate\_arn](#input\_certificate\_arn) | Amazon Resource Name (arn) for the site's certificate | `string` | n/a | yes |
-| <a name="input_default_error_object"></a> [default\_error\_object](#input\_default\_error\_object) | Error page being served from S3 bucket | `string` | n/a | yes |
-| <a name="input_default_object"></a> [default\_object](#input\_default\_object) | Home page being served from S3 bucket | `string` | n/a | yes |
-| <a name="input_domain"></a> [domain](#input\_domain) | Domain to add to route 53 as alias to distribution | `string` | n/a | yes |
-| <a name="input_dynamic_default_cache_behavior"></a> [dynamic\_default\_cache\_behavior](#input\_dynamic\_default\_cache\_behavior) | Set the cache behavior for distrubution here | `list(any)` | n/a | yes |
-| <a name="input_environment"></a> [environment](#input\_environment) | e.g. `development`, `test`, or `production` | `string` | n/a | yes |
-| <a name="input_responsible_party"></a> [responsible\_party](#input\_responsible\_party) | Person (pid) who is primarily responsible for the configuration and maintenance of this resource | `string` | n/a | yes |
-| <a name="input_sub_domain"></a> [sub\_domain](#input\_sub\_domain) | Fully qualified domain name for site being hosted | `string` | n/a | yes |
-| <a name="input_versioning_enabled"></a> [versioning\_enabled](#input\_versioning\_enabled) | Versioning for the objects in the S3 bucket | `bool` | `false` | no |
-| <a name="input_zone_id"></a> [zone\_id](#input\_zone\_id) | Route53 Hosted Zone ID to use for creation of records pointing to CloudFront distribution | `string` | n/a | yes |
+| <a name="input_create_route53_records"></a> [create\_route53\_records](#input\_create\_route53\_records) | made optional route53 | `bool` | `true` | no |
+| <a name="input_enable_logging"></a> [enable\_logging](#input\_enable\_logging) | Enable logging for Cloudfront destribution, this will create new S3 bucket | `bool` | `false` | no |
+| <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `"us-east-1"` | no |
 
 ## Outputs
 
 | Name | Description |
 |------|-------------|
-| <a name="output_cloudfront_distribution"></a> [cloudfront\_distribution](#output\_cloudfront\_distribution) | Details about the CloudFront distribution created to serve the site content |
-| <a name="output_s3_bucket"></a> [s3\_bucket](#output\_s3\_bucket) | Details of the S3 bucket created to host the site content |
-<!-- END_TF_DOCS -->
+| <a name="output_acm_certificate_arn"></a> [acm\_certificate\_arn](#output\_acm\_certificate\_arn) | Certificate ARN |
+| <a name="output_cloudfront_arn"></a> [cloudfront\_arn](#output\_cloudfront\_arn) | CloudFront ARN |
+| <a name="output_cloudfront_domain_name"></a> [cloudfront\_domain\_name](#output\_cloudfront\_domain\_name) | CloudFront Domain name |
+| <a name="output_cloudfront_hosted_zone_id"></a> [cloudfront\_hosted\_zone\_id](#output\_cloudfront\_hosted\_zone\_id) | CloudFront Hosted zone ID |
+| <a name="output_cloudfront_id"></a> [cloudfront\_id](#output\_cloudfront\_id) | CloudFront ID |
+| <a name="output_logging_s3_bucket"></a> [logging\_s3\_bucket](#output\_logging\_s3\_bucket) | Logging bucket name |
+| <a name="output_origin_s3_bucket"></a> [origin\_s3\_bucket](#output\_origin\_s3\_bucket) | Origin bucket name |
+<!-- END OF PRE-COMMIT-TERRAFORM DOCS HOOK -->
