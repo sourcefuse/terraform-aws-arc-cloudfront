@@ -60,9 +60,10 @@ variable "route53_root_domain" {
 variable "default_cache_behavior" {
   description = "Default cache behavior for the distribution"
   type = object({
-    origin_id       = string // should be same as what is given in origins
-    allowed_methods = list(string)
-    cached_methods  = list(string)
+    origin_id               = string // should be same as what is given in origins
+    allowed_methods         = list(string)
+    cached_methods          = list(string)
+    response_headers_policy = optional(string, null)
     function_association = optional(list(object({ // A config block that triggers a lambda function with specific actions (maximum 4).
       event_type   = string,                      // Specific event to trigger this function. Valid values: viewer-request or viewer-response.
       function_arn = string
@@ -84,10 +85,11 @@ variable "default_cache_behavior" {
 variable "cache_behaviors" {
   description = "Set the cache behaviors for the distribution , Note:-  You cannot use an origin request policy in a cache behavior without a cache policy."
   type = list(object({
-    origin_id       = string // should be same as what is given in origins
-    path_pattern    = string
-    allowed_methods = list(string)
-    cached_methods  = list(string)
+    origin_id               = string // should be same as what is given in origins
+    path_pattern            = string
+    allowed_methods         = list(string)
+    cached_methods          = list(string)
+    response_headers_policy = optional(string, null)
     function_association = optional(list(object({ // Specific event to trigger this function. Valid values: viewer-request or viewer-response.
       event_type   = string,
       function_arn = string
@@ -238,13 +240,11 @@ variable "origin_request_policies" {
 }
 
 
-variable "response_headers_policies" {
+variable "response_headers_policy" {
   type = map(object(
     {
-      name    = string,
-      comment = optional(string, ""),
-      max_ttl = number,
-      min_ttl = number,
+      name    = string
+      comment = optional(string, "")
       cors_config = optional(object({
         access_control_allow_credentials = bool
         access_control_allow_headers = object({
@@ -274,12 +274,13 @@ variable "response_headers_policies" {
       remove_headers_config = optional(object({
         items = list(string)
       }))
-      custom_headers_config = optional(map(object({
-        header   = string
-        override = bool
-        value    = string
-        }))
-      )
+      custom_headers_config = optional(object({
+        items = list(object({
+          header   = string
+          override = bool
+          value    = string
+      })) }), null)
+
       security_headers_config = optional(object({
         content_type_options = object({
           override = bool
@@ -296,6 +297,7 @@ variable "response_headers_policies" {
           mode_block = bool
           protection = bool
           override   = bool
+          report_uri = string
         })
         strict_transport_security = object({
           access_control_max_age_sec = string
@@ -314,7 +316,7 @@ variable "response_headers_policies" {
   description = <<-EOT
       Header policies,
 		eg. {
-			"cache-policy-1" = {
+			"response-header-policy-1" = {
 			default_ttl = 86400,
 			max_ttl     = 31536000,
 			min_ttl     = 0,
