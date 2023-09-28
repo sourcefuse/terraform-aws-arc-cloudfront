@@ -18,10 +18,6 @@ module "cloudfront" {
     aws.acm = aws.acm
   }
 
-  providers = {
-    aws.acm = aws.acm
-  }
-
   origins = [{
     origin_type   = "custom",
     origin_id     = "cloudfront-arc",

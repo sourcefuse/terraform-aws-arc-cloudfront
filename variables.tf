@@ -238,6 +238,108 @@ variable "origin_request_policies" {
 }
 
 
+variable "response_headers_policies" {
+  type = map(object(
+    {
+      name    = string,
+      comment = optional(string, ""),
+      max_ttl = number,
+      min_ttl = number,
+      cors_config = optional(object({
+        access_control_allow_credentials = bool
+        access_control_allow_headers = object({
+          items = list(string)
+        })
+        access_control_allow_methods = object({
+          items = list(string)
+        })
+        access_control_allow_origins = object({
+          items = list(string)
+        })
+        access_control_expose_headers = object({
+          items = list(string)
+        })
+        access_control_max_age_sec = number
+        origin_override            = bool
+      })),
+      server_timing_headers_config = optional(object({
+        enabled       = bool
+        sampling_rate = number
+        }),
+        {
+          enabled       = false
+          sampling_rate = 0
+      }),
+
+      remove_headers_config = optional(object({
+        items = list(string)
+      }))
+      custom_headers_config = optional(map(object({
+        header   = string
+        override = bool
+        value    = string
+        }))
+      )
+      security_headers_config = optional(object({
+        content_type_options = object({
+          override = bool
+        })
+        frame_options = object({
+          frame_option = string
+          override     = bool
+        })
+        referrer_policy = object({
+          referrer_policy = string
+          override        = bool
+        })
+        xss_protection = object({
+          mode_block = bool
+          protection = bool
+          override   = bool
+        })
+        strict_transport_security = object({
+          access_control_max_age_sec = string
+          include_subdomains         = bool
+          preload                    = bool
+          override                   = bool
+        })
+        content_security_policy = object({
+          content_security_policy = string
+          override                = bool
+        })
+
+      }))
+    }
+  ))
+  description = <<-EOT
+      Header policies,
+		eg. {
+			"cache-policy-1" = {
+			default_ttl = 86400,
+			max_ttl     = 31536000,
+			min_ttl     = 0,
+			cookies_config = {
+				cookie_behavior = "none",
+				items           = []
+			},
+			headers_config = {
+				header_behavior = "whitelist",
+				items           = ["Authorization", "Origin", "Accept", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Referer"]
+			},
+			query_string_behavior = {
+				header_behavior = "none",
+				items           = []
+			},
+			query_strings_config = {
+				query_string_behavior = "none",
+				items                 = []
+			}
+		} }
+    EOT
+
+  default = {}
+}
+
 variable "viewer_certificate" {
   type = object({
     cloudfront_default_certificate = bool,

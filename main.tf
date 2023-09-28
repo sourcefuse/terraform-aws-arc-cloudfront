@@ -58,6 +58,83 @@ resource "aws_cloudfront_origin_request_policy" "this" {
   }
 }
 
+resource "aws_cloudfront_response_headers_policy" "this" {
+  for_each = var.response_headers_policies
+
+  name    = each.value.name
+  comment = each.value.comment
+
+  dynamic "cors_config" {
+    for_each = each.value.cors_config
+    iterator = i
+
+    content {
+      enabled              = try(i.value.enabled, null)
+      origin_shield_region = try(i.value.custom_origin_config.origin_shield_region, null)
+
+      access_control_allow_credentials = try(i.value.access_control_allow_credentials, false)
+
+      access_control_allow_headers {
+        items = try(i.value.access_control_allow_headers.items, [])
+      }
+
+      access_control_allow_methods {
+        items = try(i.value.access_control_allow_methods.items, [])
+      }
+
+      access_control_allow_origins {
+        items = try(i.value.access_control_allow_origins.items, [])
+      }
+
+      access_control_expose_headers {
+        items = try(i.value.access_control_expose_headers.items, [])
+      }
+
+      access_control_max_age_sec = try(i.value.access_control_max_age_sec, 600)
+      origin_override            = try(i.value.origin_override, true)
+
+    }
+  }
+
+
+  dynamic "security_headers_config" {
+    for_each = each.value.security_headers_config
+    iterator = i
+
+    content_type_options {
+      override = try(i.value.content_type_options.override, false)
+    }
+
+    frame_options {
+      frame_options = i.value.frame_options.frame_options
+      override      = try(i.value.frame_options.override, false)
+    }
+
+    referrer_policy {
+      referrer_policy = i.value.referrer_policy.referrer_policy
+      override        = try(i.value.referrer_policy.override, false)
+    }
+
+    xss_protection {
+      mode_block = try(i.value.xss_protection.mode_block, false)
+      protection = try(i.value.xss_protection.protection, false)
+      override   = try(i.value.xss_protection.override, false)
+    }
+
+    strict_transport_security {
+      access_control_max_age_sec = try(i.value.strict_transport_security.access_control_max_age_sec, "31536000")
+      include_subdomains         = try(i.value.strict_transport_security.include_subdomains, false)
+      preload                    = try(i.value.strict_transport_security.preload, false)
+      override                   = try(i.value.strict_transport_security.override, false)
+    }
+
+    content_security_policy {
+      content_security_policy = try(i.value.content_security_policy.content_security_policy, "31536000")
+      override                = try(i.value.content_security_policy.override, false)
+    }
+
+  }
+}
 
 resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
   for_each = {
@@ -91,14 +168,6 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
 ##################################################################################
 # CDN #
 ##################################################################################
-
-# resource "aws_cloudfront_origin_access_control" "this" {
-#   name                              = local.origin_access_control_name
-#   description                       = "Origin access control"
-#   origin_access_control_origin_type = "s3"
-#   signing_behavior                  = "always"
-#   signing_protocol                  = "sigv4"
-# }
 
 resource "aws_cloudfront_origin_access_control" "s3" {
   for_each = {
