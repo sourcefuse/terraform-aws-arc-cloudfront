@@ -60,10 +60,11 @@ variable "route53_root_domain" {
 variable "default_cache_behavior" {
   description = "Default cache behavior for the distribution"
   type = object({
-    origin_id               = string // should be same as what is given in origins
-    allowed_methods         = list(string)
-    cached_methods          = list(string)
-    response_headers_policy = optional(string, null)
+    origin_id                               = string // should be same as what is given in origins
+    allowed_methods                         = list(string)
+    cached_methods                          = list(string)
+    response_headers_policy_name            = optional(string, null)
+    use_aws_managed_response_headers_policy = optional(bool, false)
     function_association = optional(list(object({ // A config block that triggers a lambda function with specific actions (maximum 4).
       event_type   = string,                      // Specific event to trigger this function. Valid values: viewer-request or viewer-response.
       function_arn = string
@@ -85,11 +86,12 @@ variable "default_cache_behavior" {
 variable "cache_behaviors" {
   description = "Set the cache behaviors for the distribution , Note:-  You cannot use an origin request policy in a cache behavior without a cache policy."
   type = list(object({
-    origin_id               = string // should be same as what is given in origins
-    path_pattern            = string
-    allowed_methods         = list(string)
-    cached_methods          = list(string)
-    response_headers_policy = optional(string, null)
+    origin_id                               = string // should be same as what is given in origins
+    path_pattern                            = string
+    allowed_methods                         = list(string)
+    cached_methods                          = list(string)
+    response_headers_policy_name            = optional(string, null)
+    use_aws_managed_response_headers_policy = optional(bool, false)
     function_association = optional(list(object({ // Specific event to trigger this function. Valid values: viewer-request or viewer-response.
       event_type   = string,
       function_arn = string

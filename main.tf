@@ -143,37 +143,38 @@ resource "aws_cloudfront_response_headers_policy" "this" {
     }
   }
 
-  dynamic "remove_headers_config" {
-    for_each = each.value.remove_headers_config == null ? [] : [each.value.remove_headers_config]
+  # TODO: Fix issue in setting below configs
+  #   dynamic "remove_headers_config" {
+  #     for_each = each.value.remove_headers_config == null ? [] : [each.value.remove_headers_config]
 
-    content {
-      dynamic "items" {
-        for_each = remove_headers_config
+  #     content {
+  #       dynamic "items" {
+  #         for_each = remove_headers_config
 
-        content {
-          header = items
-        }
-      }
-    }
-  }
+  #         content {
+  #           header = items
+  #         }
+  #       }
+  #     }
+  #   }
 
 
-  dynamic "custom_headers_config" {
-    for_each = each.value.custom_headers_config == null ? [] : [each.value.custom_headers_config]
+  #   dynamic "custom_headers_config" {
+  #     for_each = each.value.custom_headers_config == null ? [] : [each.value.custom_headers_config]
 
-    content {
-      dynamic "items" {
-        for_each = custom_headers_config
+  #     content {
+  #       dynamic "items" {
+  #         for_each = custom_headers_config
 
-        content {
-          header   = items.header
-          override = try(items.override, false)
-          value    = try(items.value, "none")
-        }
-      }
+  #         content {
+  #           header   = items.header
+  #           override = try(items.override, false)
+  #           value    = try(items.value, "none")
+  #         }
+  #       }
 
-    }
-  }
+  #     }
+  #   }
 
 }
 
@@ -295,7 +296,7 @@ resource "aws_cloudfront_distribution" "this" {
 
     cache_policy_id            = var.default_cache_behavior.use_aws_managed_cache_policy ? local.managed_cache_policies[var.default_cache_behavior.cache_policy_name] : aws_cloudfront_cache_policy.this[var.default_cache_behavior.cache_policy_name].id
     origin_request_policy_id   = var.default_cache_behavior.use_aws_managed_origin_request_policy ? local.managed_origin_request_policies[var.default_cache_behavior.origin_request_policy_name] : (var.default_cache_behavior.origin_request_policy_name == null ? null : aws_cloudfront_origin_request_policy.this[var.default_cache_behavior.origin_request_policy_name].id)
-    response_headers_policy_id = var.response_headers_policy == null ? null : aws_cloudfront_response_headers_policy.this[var.default_cache_behavior.response_headers_policy].id
+    response_headers_policy_id = var.default_cache_behavior.use_aws_managed_response_headers_policy ? local.managed_response_header_policies[var.default_cache_behavior.response_headers_policy_name] : (var.default_cache_behavior.response_headers_policy_name == null ? null : aws_cloudfront_response_headers_policy.this[var.default_cache_behavior.response_headers_policy_name].id)
 
     dynamic "lambda_function_association" {
       for_each = var.default_cache_behavior.lambda_function_association == null ? [] : var.default_cache_behavior.lambda_function_association
@@ -328,16 +329,16 @@ resource "aws_cloudfront_distribution" "this" {
     iterator = i
 
     content {
-      path_pattern               = i.value.path_pattern
-      allowed_methods            = i.value.allowed_methods
-      cached_methods             = i.value.cached_methods
-      target_origin_id           = i.value.origin_id
-      compress                   = lookup(i.value, "compress", false)
-      response_headers_policy_id = var.response_headers_policy == null ? null : aws_cloudfront_response_headers_policy.this[i.value.response_headers_policy].id
-      viewer_protocol_policy     = i.value.viewer_protocol_policy
+      path_pattern           = i.value.path_pattern
+      allowed_methods        = i.value.allowed_methods
+      cached_methods         = i.value.cached_methods
+      target_origin_id       = i.value.origin_id
+      compress               = lookup(i.value, "compress", false)
+      viewer_protocol_policy = i.value.viewer_protocol_policy
 
-      cache_policy_id          = i.value.use_aws_managed_cache_policy ? local.managed_cache_policies[i.value.cache_policy_name] : aws_cloudfront_cache_policy.this[i.value.cache_policy_name].id
-      origin_request_policy_id = i.value.use_aws_managed_origin_request_policy ? local.managed_origin_request_policies[i.value.origin_request_policy_name] : (i.value.origin_request_policy_name == null ? null : aws_cloudfront_origin_request_policy.this[i.value.origin_request_policy_name].id)
+      cache_policy_id            = i.value.use_aws_managed_cache_policy ? local.managed_cache_policies[i.value.cache_policy_name] : aws_cloudfront_cache_policy.this[i.value.cache_policy_name].id
+      origin_request_policy_id   = i.value.use_aws_managed_origin_request_policy ? local.managed_origin_request_policies[i.value.origin_request_policy_name] : (i.value.origin_request_policy_name == null ? null : aws_cloudfront_origin_request_policy.this[i.value.origin_request_policy_name].id)
+      response_headers_policy_id = i.value.use_aws_managed_response_headers_policy ? local.managed_response_header_policies[i.value.response_headers_policy_name] : (i.value.response_headers_policy_name == null ? null : aws_cloudfront_response_headers_policy.this[i.value.response_headers_policy_name].id)
 
 
       dynamic "lambda_function_association" {
