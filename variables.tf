@@ -60,9 +60,11 @@ variable "route53_root_domain" {
 variable "default_cache_behavior" {
   description = "Default cache behavior for the distribution"
   type = object({
-    origin_id       = string // should be same as what is given in origins
-    allowed_methods = list(string)
-    cached_methods  = list(string)
+    origin_id                               = string // should be same as what is given in origins
+    allowed_methods                         = list(string)
+    cached_methods                          = list(string)
+    response_headers_policy_name            = optional(string, null)
+    use_aws_managed_response_headers_policy = optional(bool, false)
     function_association = optional(list(object({ // A config block that triggers a lambda function with specific actions (maximum 4).
       event_type   = string,                      // Specific event to trigger this function. Valid values: viewer-request or viewer-response.
       function_arn = string
@@ -84,10 +86,12 @@ variable "default_cache_behavior" {
 variable "cache_behaviors" {
   description = "Set the cache behaviors for the distribution , Note:-  You cannot use an origin request policy in a cache behavior without a cache policy."
   type = list(object({
-    origin_id       = string // should be same as what is given in origins
-    path_pattern    = string
-    allowed_methods = list(string)
-    cached_methods  = list(string)
+    origin_id                               = string // should be same as what is given in origins
+    path_pattern                            = string
+    allowed_methods                         = list(string)
+    cached_methods                          = list(string)
+    response_headers_policy_name            = optional(string, null)
+    use_aws_managed_response_headers_policy = optional(bool, false)
     function_association = optional(list(object({ // Specific event to trigger this function. Valid values: viewer-request or viewer-response.
       event_type   = string,
       function_arn = string
@@ -237,6 +241,108 @@ variable "origin_request_policies" {
   default     = {}
 }
 
+
+variable "response_headers_policy" {
+  type = map(object(
+    {
+      name    = string
+      comment = optional(string, "")
+      cors_config = optional(object({
+        access_control_allow_credentials = bool
+        access_control_allow_headers = object({
+          items = list(string)
+        })
+        access_control_allow_methods = object({
+          items = list(string)
+        })
+        access_control_allow_origins = object({
+          items = list(string)
+        })
+        access_control_expose_headers = object({
+          items = list(string)
+        })
+        access_control_max_age_sec = number
+        origin_override            = bool
+      })),
+      server_timing_headers_config = optional(object({
+        enabled       = bool
+        sampling_rate = number
+        }),
+        {
+          enabled       = false
+          sampling_rate = 0
+      }),
+
+      remove_headers_config = optional(object({
+        items = list(string)
+      }))
+      custom_headers_config = optional(object({
+        items = list(object({
+          header   = string
+          override = bool
+          value    = string
+      })) }), null)
+
+      security_headers_config = optional(object({
+        content_type_options = object({
+          override = bool
+        })
+        frame_options = object({
+          frame_option = string
+          override     = bool
+        })
+        referrer_policy = object({
+          referrer_policy = string
+          override        = bool
+        })
+        xss_protection = object({
+          mode_block = bool
+          protection = bool
+          override   = bool
+          report_uri = string
+        })
+        strict_transport_security = object({
+          access_control_max_age_sec = string
+          include_subdomains         = bool
+          preload                    = bool
+          override                   = bool
+        })
+        content_security_policy = object({
+          content_security_policy = string
+          override                = bool
+        })
+
+      }))
+    }
+  ))
+  description = <<-EOT
+      Header policies,
+		eg. {
+			"response-header-policy-1" = {
+			default_ttl = 86400,
+			max_ttl     = 31536000,
+			min_ttl     = 0,
+			cookies_config = {
+				cookie_behavior = "none",
+				items           = []
+			},
+			headers_config = {
+				header_behavior = "whitelist",
+				items           = ["Authorization", "Origin", "Accept", "Access-Control-Request-Method", "Access-Control-Request-Headers", "Referer"]
+			},
+			query_string_behavior = {
+				header_behavior = "none",
+				items           = []
+			},
+			query_strings_config = {
+				query_string_behavior = "none",
+				items                 = []
+			}
+		} }
+    EOT
+
+  default = {}
+}
 
 variable "viewer_certificate" {
   type = object({

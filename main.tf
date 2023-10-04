@@ -58,6 +58,125 @@ resource "aws_cloudfront_origin_request_policy" "this" {
   }
 }
 
+resource "aws_cloudfront_response_headers_policy" "this" {
+  for_each = var.response_headers_policy
+
+  name    = each.value.name
+  comment = each.value.comment
+
+  dynamic "cors_config" {
+    for_each = each.value.cors_config == null ? [] : [1]
+
+    content {
+      access_control_allow_credentials = try(each.value.cors_config.access_control_allow_credentials, false)
+
+      access_control_allow_headers {
+        items = try(each.value.cors_config.access_control_allow_headers.items, [])
+      }
+
+      access_control_allow_methods {
+        items = try(each.value.cors_config.access_control_allow_methods.items, [])
+      }
+
+      access_control_allow_origins {
+        items = try(each.value.cors_config.access_control_allow_origins.items, [])
+      }
+
+      access_control_expose_headers {
+        items = try(each.value.cors_config.access_control_expose_headers.items, [])
+      }
+
+      access_control_max_age_sec = try(each.value.cors_config.access_control_max_age_sec, 600)
+      origin_override            = try(each.value.cors_config.origin_override, true)
+
+    }
+  }
+
+
+  dynamic "security_headers_config" {
+    for_each = each.value.security_headers_config == null ? [] : [1]
+
+    content {
+      content_type_options {
+        override = try(each.value.security_headers_config.content_type_options.override, false)
+      }
+
+      frame_options {
+        frame_option = each.value.security_headers_config.frame_options.frame_option
+        override     = try(each.value.security_headers_config.frame_options.override, false)
+      }
+
+      referrer_policy {
+        referrer_policy = each.value.security_headers_config.referrer_policy.referrer_policy
+        override        = try(each.value.security_headers_config.referrer_policy.override, false)
+      }
+
+      xss_protection {
+        mode_block = try(each.value.security_headers_config.xss_protection.mode_block, false)
+        protection = try(each.value.security_headers_config.xss_protection.protection, false)
+        override   = try(each.value.security_headers_config.xss_protection.override, false)
+        report_uri = try(each.value.security_headers_config.xss_protection.report_uri, "")
+      }
+
+      strict_transport_security {
+        access_control_max_age_sec = try(each.value.security_headers_config.strict_transport_security.access_control_max_age_sec, "31536000")
+        include_subdomains         = try(each.value.security_headers_config.strict_transport_security.include_subdomains, false)
+        preload                    = try(each.value.security_headers_config.strict_transport_security.preload, false)
+        override                   = try(each.value.security_headers_config.strict_transport_security.override, false)
+      }
+
+      content_security_policy {
+        content_security_policy = try(each.value.security_headers_config.content_security_policy.content_security_policy, "31536000")
+        override                = try(each.value.security_headers_config.content_security_policy.override, false)
+      }
+
+
+    }
+  }
+
+  dynamic "server_timing_headers_config" {
+    for_each = each.value.server_timing_headers_config == null ? [] : [1]
+
+    content {
+      enabled       = try(each.value.server_timing_headers_config.enabled, false)
+      sampling_rate = try(each.value.server_timing_headers_config.sampling_rate, 0)
+    }
+  }
+
+  # TODO: Fix issue in setting below configs
+  #   dynamic "remove_headers_config" {
+  #     for_each = each.value.remove_headers_config == null ? [] : [each.value.remove_headers_config]
+
+  #     content {
+  #       dynamic "items" {
+  #         for_each = remove_headers_config
+
+  #         content {
+  #           header = items
+  #         }
+  #       }
+  #     }
+  #   }
+
+
+  #   dynamic "custom_headers_config" {
+  #     for_each = each.value.custom_headers_config == null ? [] : [each.value.custom_headers_config]
+
+  #     content {
+  #       dynamic "items" {
+  #         for_each = custom_headers_config
+
+  #         content {
+  #           header   = items.header
+  #           override = try(items.override, false)
+  #           value    = try(items.value, "none")
+  #         }
+  #       }
+
+  #     }
+  #   }
+
+}
 
 resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
   for_each = {
@@ -91,14 +210,6 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
 ##################################################################################
 # CDN #
 ##################################################################################
-
-# resource "aws_cloudfront_origin_access_control" "this" {
-#   name                              = local.origin_access_control_name
-#   description                       = "Origin access control"
-#   origin_access_control_origin_type = "s3"
-#   signing_behavior                  = "always"
-#   signing_protocol                  = "sigv4"
-# }
 
 resource "aws_cloudfront_origin_access_control" "s3" {
   for_each = {
@@ -183,9 +294,9 @@ resource "aws_cloudfront_distribution" "this" {
     compress               = lookup(var.default_cache_behavior, "compress", false)
     viewer_protocol_policy = var.default_cache_behavior.viewer_protocol_policy
 
-    cache_policy_id          = var.default_cache_behavior.use_aws_managed_cache_policy ? local.managed_cache_policies[var.default_cache_behavior.cache_policy_name] : aws_cloudfront_cache_policy.this[var.default_cache_behavior.cache_policy_name].id
-    origin_request_policy_id = var.default_cache_behavior.use_aws_managed_origin_request_policy ? local.managed_origin_request_policies[var.default_cache_behavior.origin_request_policy_name] : (var.default_cache_behavior.origin_request_policy_name == null ? null : aws_cloudfront_origin_request_policy.this[var.default_cache_behavior.origin_request_policy_name].id)
-
+    cache_policy_id            = var.default_cache_behavior.use_aws_managed_cache_policy ? local.managed_cache_policies[var.default_cache_behavior.cache_policy_name] : aws_cloudfront_cache_policy.this[var.default_cache_behavior.cache_policy_name].id
+    origin_request_policy_id   = var.default_cache_behavior.use_aws_managed_origin_request_policy ? local.managed_origin_request_policies[var.default_cache_behavior.origin_request_policy_name] : (var.default_cache_behavior.origin_request_policy_name == null ? null : aws_cloudfront_origin_request_policy.this[var.default_cache_behavior.origin_request_policy_name].id)
+    response_headers_policy_id = var.default_cache_behavior.use_aws_managed_response_headers_policy ? local.managed_response_header_policies[var.default_cache_behavior.response_headers_policy_name] : (var.default_cache_behavior.response_headers_policy_name == null ? null : aws_cloudfront_response_headers_policy.this[var.default_cache_behavior.response_headers_policy_name].id)
 
     dynamic "lambda_function_association" {
       for_each = var.default_cache_behavior.lambda_function_association == null ? [] : var.default_cache_behavior.lambda_function_association
@@ -225,8 +336,9 @@ resource "aws_cloudfront_distribution" "this" {
       compress               = lookup(i.value, "compress", false)
       viewer_protocol_policy = i.value.viewer_protocol_policy
 
-      cache_policy_id          = i.value.use_aws_managed_cache_policy ? local.managed_cache_policies[i.value.cache_policy_name] : aws_cloudfront_cache_policy.this[i.value.cache_policy_name].id
-      origin_request_policy_id = i.value.use_aws_managed_origin_request_policy ? local.managed_origin_request_policies[i.value.origin_request_policy_name] : (i.value.origin_request_policy_name == null ? null : aws_cloudfront_origin_request_policy.this[i.value.origin_request_policy_name].id)
+      cache_policy_id            = i.value.use_aws_managed_cache_policy ? local.managed_cache_policies[i.value.cache_policy_name] : aws_cloudfront_cache_policy.this[i.value.cache_policy_name].id
+      origin_request_policy_id   = i.value.use_aws_managed_origin_request_policy ? local.managed_origin_request_policies[i.value.origin_request_policy_name] : (i.value.origin_request_policy_name == null ? null : aws_cloudfront_origin_request_policy.this[i.value.origin_request_policy_name].id)
+      response_headers_policy_id = i.value.use_aws_managed_response_headers_policy ? local.managed_response_header_policies[i.value.response_headers_policy_name] : (i.value.response_headers_policy_name == null ? null : aws_cloudfront_response_headers_policy.this[i.value.response_headers_policy_name].id)
 
 
       dynamic "lambda_function_association" {

@@ -19,7 +19,7 @@
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | sourcefuse/arc-cloudfront/aws | 4.0.1 |
+| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | ../ | n/a |
 | <a name="module_tags"></a> [tags](#module\_tags) | sourcefuse/arc-tags/aws | 1.2.3 |
 
 ## Resources
