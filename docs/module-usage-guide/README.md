@@ -56,8 +56,8 @@ For a list of outputs, see the README [Outputs](https://github.com/sourcefuse/te
 ### Basic Usage
 For basic usage, see the [example](https://github.com/sourcefuse/terraform-aws-arc-cloudfront/tree/main/example) folder.
 
-This example will:
-- Create the CloudFront Domain
+This example will create:
+- CloudFront Domain
 - ACM Cetificate
 - Origin Request policy
 - Cache policy
