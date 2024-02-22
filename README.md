@@ -3,14 +3,15 @@
 [![Known Vulnerabilities](https://github.com/sourcefuse/terraform-aws-refarch-cloudfront/actions/workflows/snyk.yaml/badge.svg)](https://github.com/sourcefuse/terraform-aws-refarch-cloudfront/actions/workflows/snyk.yaml)
 
 ## Overview
+SourceFuse AWS Reference Architecture (ARC) Terraform module for managing Cloudfront
 
-SourceFuse AWS Reference Architecture (ARC) Terraform module for managing Cloudfront, S3, Route53 and ACM.
+For more information about this repository and its usage, please see [Terraform AWS ARC CloudFront Usage Guide](https://github.com/sourcefuse/terraform-aws-arc-cloudfront/blob/main/docs/module-usage-guide/README.md).
 
 ## Usage
 
 To see a full example, check out the [main.tf](https://github.com/sourcefuse/terraform-aws-arc-cloudfront/blob/main/example/main.tf) file in the example folder.
 
-``` hcl
+``` tcl
 module "tags" {
   source  = "sourcefuse/arc-tags/aws"
   version = "1.2.3"
