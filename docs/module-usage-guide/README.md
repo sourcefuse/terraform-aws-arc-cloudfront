@@ -39,9 +39,9 @@ Integrate the module with your existing Terraform mono repo configuration, follo
 
 ### Required AWS Permissions
 Ensure that the AWS credentials used to execute Terraform have the necessary permissions to create and modify
-	- CloudFront
-	- ACM
-	- Route53
+- CloudFront
+- ACM
+- Route53
 
 ## Module Configuration
 
