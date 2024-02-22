@@ -11,10 +11,10 @@ module "tags" {
 }
 
 module "cloudfront" {
-  source = "../"
-
+  source  = "sourcefuse/arc-cloudfront/aws"
+  version = "4.0.6"
   providers = {
-    aws.acm = aws.acm
+    aws.acm = aws.acm // Certificate has to be created in us-east-1 region
   }
 
   origins = [{
