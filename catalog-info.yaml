@@ -2,12 +2,19 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: terraform-aws-refarch-cloudfront
+  name: terraform-aws-arc-cloudfront
   namespace: arc
   description: Terraform CloudFront module.
   annotations:
-    github.com/project-slug: sourcefuse/terraform-aws-refarch-cloudfront
+    github.com/project-slug: sourcefuse/terraform-aws-arc-cloudfront
     backstage.io/techdocs-ref: dir:.
+  links:
+    - url: https://sourcefuse.github.io/arc-docs/arc-iac-docs/
+      title: ARC Docs
+      icon: dashboard
+    - url: https://sourcefuse.github.io/arc-docs/arc-iac-docs/modules/terraform-aws-arc-cloudfront/
+      title: ARC Cloudfront Docs
+      icon: dashboard
 spec:
   type: service
   owner: sourcefuse
