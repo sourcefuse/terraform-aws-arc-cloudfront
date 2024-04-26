@@ -5,8 +5,3 @@ data "aws_caller_identity" "current" {}
 data "aws_iam_session_context" "current" {
   arn = data.aws_caller_identity.current.arn
 }
-
-data "aws_iam_roles" "roles_which_uses_kms_key" {
-  count       = length(var.aws_services)
-  path_prefix = "/${var.environment}/${replace(var.aws_services[count.index], ".amazonaws.com", "")}"
-}
