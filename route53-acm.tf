@@ -3,19 +3,19 @@
 # Route53 and ACM #
 ##################################################################################
 
-  resource "aws_acm_certificate" "this" {
-    count                     = var.acm_details.domain_name == "" ? 0 : 1
-    domain_name               = var.acm_details.domain_name
-    validation_method         = "DNS"
-    subject_alternative_names = var.acm_details.subject_alternative_names
-    provider                  = aws.acm
+resource "aws_acm_certificate" "this" {
+  count                     = var.acm_details.domain_name == "" ? 0 : 1
+  domain_name               = var.acm_details.domain_name
+  validation_method         = "DNS"
+  subject_alternative_names = var.acm_details.subject_alternative_names
+  provider                  = aws.acm
 
-    lifecycle {
-      create_before_destroy = true
-    }
-
-    tags = var.tags
+  lifecycle {
+    create_before_destroy = true
   }
+
+  tags = var.tags
+}
 
 // used to fetch route53 zone
 data "aws_route53_zone" "this" {
