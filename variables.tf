@@ -397,6 +397,11 @@ variable "acm_details" {
     subject_alternative_names = []
   }
 }
+variable "acm_lifecycle" {
+  type        = bool
+  default     = false
+  description = "Enables AWS ACM lifecycle management, automatically removing certificates attached to CloudFront distributions when no longer needed and before destroying it."
+}
 
 variable "route53_record_ttl" {
   type        = string

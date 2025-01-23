@@ -10,6 +10,10 @@ resource "aws_acm_certificate" "this" {
   subject_alternative_names = var.acm_details.subject_alternative_names
   provider                  = aws.acm
 
+  lifecycle {
+    create_before_destroy = var.acm_lifecycle
+  }
+
   tags = var.tags
 }
 
