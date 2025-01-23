@@ -399,7 +399,7 @@ variable "acm_details" {
 }
 variable "acm_lifecycle" {
   type        = bool
-  default     = false
+  default     = true
   description = "Enables AWS ACM lifecycle management, automatically removing certificates attached to CloudFront distributions when no longer needed and before destroying it."
 }
 

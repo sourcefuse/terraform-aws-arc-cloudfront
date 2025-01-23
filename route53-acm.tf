@@ -3,10 +3,6 @@
 # Route53 and ACM #
 ##################################################################################
 
-locals {
-  acm_lifecycle = var.acm_lifecycle != null ? var.acm_lifecycle : false
-}
-
   resource "aws_acm_certificate" "this" {
     count                     = var.acm_details.domain_name == "" ? 0 : 1
     domain_name               = var.acm_details.domain_name
@@ -15,7 +11,7 @@ locals {
     provider                  = aws.acm
 
     lifecycle {
-      create_before_destroy = local.acm_lifecycle
+      create_before_destroy = var.acm_lifecycle
     }
 
     tags = var.tags
