@@ -11,7 +11,7 @@
     provider                  = aws.acm
 
     lifecycle {
-      create_before_destroy = var.acm_lifecycle
+      create_before_destroy = true
     }
 
     tags = var.tags
