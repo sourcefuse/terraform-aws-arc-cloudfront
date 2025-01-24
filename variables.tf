@@ -79,7 +79,7 @@ variable "default_cache_behavior" {
     use_aws_managed_origin_request_policy = optional(bool),
     origin_request_policy_name            = optional(string), // It can be custom or aws managed policy name , if custom origin_request_policies variable key should match
     compress                              = bool
-    viewer_protocol_policy                = string
+    viewer_protocol_policy                = optional(string, "redirect-to-https")
   })
 }
 
@@ -144,8 +144,8 @@ variable "create_route53_records" {
 
 variable "geo_restriction" {
   type = object({
-    restriction_type = string,
-    locations        = list(string)
+    restriction_type = optional(string, "whitelist")
+    locations        = optional(list(string), ["IN", "US"])
   })
   description = "Geographic restriction"
   default = {
