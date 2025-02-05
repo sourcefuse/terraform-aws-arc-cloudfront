@@ -144,8 +144,8 @@ variable "create_route53_records" {
 
 variable "geo_restriction" {
   type = object({
-    restriction_type = optional(string, "whitelist")
-    locations        = optional(list(string), ["IN", "US"])
+    restriction_type = optional(string, "blacklist")
+    locations        = optional(list(string), ["KP", "RU"])
   })
   description = "Geographic restriction"
   default = {
