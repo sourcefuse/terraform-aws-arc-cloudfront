@@ -113,7 +113,7 @@ resource "aws_iam_role_policy" "logs_role_policy" {
  */
 resource "aws_cloudwatch_log_group" "log_group" {
   name              = "/aws/lambda/edge-function"
-  retention_in_days = 7
+  retention_in_days = 3
   tags              = module.tags.tags
 }
 
