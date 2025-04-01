@@ -112,9 +112,9 @@ resource "aws_iam_role_policy" "logs_role_policy" {
  * of the CloudFront edge location handling the request.
  */
 resource "aws_cloudwatch_log_group" "log_group" {
-  name = "/aws/lambda/edge-function"
+  name              = "/aws/lambda/edge-function"
   retention_in_days = 7
-  tags = module.tags.tags
+  tags              = module.tags.tags
 }
 
 // Permission is important : The Lambda function associated with the CloudFront distribution is invalid or doesn't have the required permissions.
