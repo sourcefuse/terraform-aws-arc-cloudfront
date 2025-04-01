@@ -35,10 +35,10 @@ resource "aws_lambda_function" "this" {
   source_code_hash = data.archive_file.this.output_base64sha256 // To redeploy the code its if its changed
 
   filename      = data.archive_file.this.output_path
-  function_name = "test-edge-function"
+  function_name = "test-edge-function-test"
   role          = aws_iam_role.lambda_at_edge.arn
   handler       = "edgeFunction.handler"
-  runtime       = "nodejs14.x"
+  runtime       = "nodejs18.x"
   architectures = ["x86_64"]
   description   = "This is a test Edge function"
   publish       = true
@@ -72,7 +72,7 @@ data "aws_iam_policy_document" "assume_role" {
  * This policy also has permissions to write logs to CloudWatch.
  */
 resource "aws_iam_role" "lambda_at_edge" {
-  name               = "edge-function-role"
+  name               = "edge-function-role-test"
   assume_role_policy = data.aws_iam_policy_document.assume_role.json
   tags               = module.tags.tags
 }

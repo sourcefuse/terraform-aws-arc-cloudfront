@@ -20,7 +20,7 @@ module "cloudfront" {
   origins = [{
     origin_type   = "custom",
     origin_id     = "cloudfront-arc",
-    domain_name   = "test.wpengine.com",
+    domain_name   = "test.arc-poc.link",
     bucket_name   = "",
     create_bucket = false,
     custom_origin_config = {
@@ -35,9 +35,9 @@ module "cloudfront" {
 
   namespace              = "test"
   description            = "This is a test Cloudfront distribution"
-  route53_root_domain    = "sfrefarch.com" // Used to fetch the Hosted Zone
+  route53_root_domain    = "arc-poc.link" // Used to fetch the Hosted Zone
   create_route53_records = var.create_route53_records
-  aliases                = ["cf.sfrefarch.com", "www.cf.sfrefarch.com", "test.sfrefarch.com", "*.sfrefarch.com", "test1.sfrefarch.com"]
+  aliases                = ["cf.arc-poc.link", "www.cf.arc-poc.link", "test.arc-poc.link", "*.arc-poc.link", "test1.arc-poc.link"]
   enable_logging         = var.enable_logging // Create a new S3 bucket for storing Cloudfront logs
 
   default_cache_behavior = {
@@ -91,8 +91,8 @@ module "cloudfront" {
   }
 
   acm_details = {
-    domain_name               = "*.sfrefarch.com",
-    subject_alternative_names = ["www.cf.sfrefarch.com"]
+    domain_name               = "*.arc-poc.link",
+    subject_alternative_names = ["www.cf.arc-poc.link"]
   }
 
   cache_policies = {
