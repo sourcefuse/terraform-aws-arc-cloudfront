@@ -20,6 +20,6 @@ func TestTerraformExample(t *testing.T) {
 	// Assert
 	assert := assert.New(t)
 
-	outputValue := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
+	outputValue := terraform.OutputMap(t, terraformOptions, "cloudfront_domain_name")
 	assert.NotNil(outputValue)
 }
