@@ -48,5 +48,7 @@ jobs:
             go test -v
 
       - name: Run Go Terratest
-        working-directory: test
-        run: go test -v
+        run: |
+            pwd
+            ls
+            go test -v
