@@ -44,7 +44,6 @@ jobs:
             go get github.com/gruntwork-io/terratest/modules/terraform
             go get github.com/stretchr/testify/assert
             go mod tidy
-            go test -v
 
       - name: Run Go Terratest
         run: |

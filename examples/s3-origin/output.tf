@@ -3,7 +3,7 @@
 #   description = "CloudFront Domain name"
 # }
 
-output "cloudfront_domain_names" {
+output "cloudfront_domain_name" {
   value = {
     for key, mod in module.cloudfront :
     key => mod.cloudfront_domain_name
