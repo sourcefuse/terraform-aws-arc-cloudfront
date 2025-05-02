@@ -39,7 +39,7 @@ jobs:
         run: |
             ls 
             pwd
-            cd test
+            cd tests
             ls
             go mod init terraform-test || true
             go get github.com/gruntwork-io/terratest/modules/terraform
