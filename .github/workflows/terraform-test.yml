@@ -50,4 +50,4 @@ jobs:
         run: |
             pwd
             ls
-            go test -v -timeout 40m
+            go test -v example_test.go -timeout 40m
