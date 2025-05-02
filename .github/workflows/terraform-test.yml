@@ -1,0 +1,49 @@
+name: Terraform Terratest with Go
+
+on:
+  push:
+    branches:
+      - feature/update-examples
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  terratest:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v2
+        with:
+        #   role-to-assume: arn:aws:iam::<YOUR_AWS_ACCOUNT_ID>:role/<YOUR_OIDC_ROLE_NAME>
+          role-to-assume: arn:aws:iam::884360309640:role/arc-iac-oidc-github-role
+          aws-region: us-east-1
+
+      - name: Set up Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.20'
+
+      - name: Set up Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: Initialize Go module and install dependencies
+        working-directory: test
+        run: |
+            mkdir temp && cp -r test/* temp/ && cd temp
+            go mod init terraform-test || true
+            go get github.com/gruntwork-io/terratest/modules/terraform
+            go get github.com/stretchr/testify/assert
+            go mod tidy
+            go test -v
+
+      - name: Run Go Terratest
+        working-directory: test
+        run: go test -v
