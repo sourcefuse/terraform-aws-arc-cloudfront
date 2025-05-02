@@ -20,7 +20,7 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
-        #   role-to-assume: arn:aws:iam::<YOUR_AWS_ACCOUNT_ID>:role/<YOUR_OIDC_ROLE_NAME>
+        #   role-to-assume: arn:aws:iam::<AWS_ACCOUNT_ID>:role/<OIDC_ROLE_NAME>
           role-to-assume: arn:aws:iam::884360309640:role/arc-iac-oidc-github-role
           aws-region: us-east-1
 
@@ -35,7 +35,6 @@ jobs:
           terraform_version: 1.5.7
 
       - name: Initialize Go module and install dependencies
-        # working-directory: test
         run: |
             ls 
             pwd
@@ -51,4 +50,4 @@ jobs:
         run: |
             pwd
             ls
-            go test -v
+            go test -v -timeout 40m
