@@ -37,7 +37,6 @@ jobs:
       - name: Initialize Go module and install dependencies
         working-directory: test
         run: |
-            mkdir temp && cp -r test/* temp/ && cd temp
             go mod init terraform-test || true
             go get github.com/gruntwork-io/terratest/modules/terraform
             go get github.com/stretchr/testify/assert
