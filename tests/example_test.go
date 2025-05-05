@@ -1,7 +1,6 @@
 package test
 
 import (
-	"encoding/json"
 	"testing"
 
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -19,21 +18,18 @@ func TestTerraformExample(t *testing.T) {
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Assert
-	assert := assert.New(t)
+	// assert := assert.New(t)
 
 	
 	// outputValue := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
 
 	// assert.NotNil(outputValue)
 
-	// Use OutputJson to get raw JSON string
-	rawOutput := terraform.OutputJson(t, terraformOptions, "cloudfront_domain_name")
 
-	// Unmarshal the JSON string into a Go string
-	var domain string
-	err := json.Unmarshal([]byte(rawOutput), &domain)
+	// Get the CloudFront domain name using terraform.Output (not OutputJson)
+	cloudfrontDomain := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
 
-	// Validate
-	assert.NoError(err, "Failed to unmarshal cloudfront_domain_name output")
-	assert.NotEmpty(domain, "Expected a non-empty CloudFront domain name")
+	// Assert
+	assert := assert.New(t)
+	assert.NotEmpty(cloudfrontDomain, "Expected non-empty CloudFront domain name")
 }
