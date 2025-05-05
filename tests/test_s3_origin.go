@@ -12,7 +12,7 @@ func TestCloudFrontWithAcm(t *testing.T) {
 
 	// Arrange
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../examples/s3-origin",
+		TerraformDir: "../examples/s3-origin/.",
 	}
 
 	defer terraform.Destroy(t, terraformOptions)
