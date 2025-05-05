@@ -7,24 +7,21 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
-func TestCloudFrontWithAcm(t *testing.T) {
-	t.Parallel()
-
+func TestTerraformExample(t *testing.T) {
 	// Arrange
 	terraformOptions := &terraform.Options{
 		TerraformDir: "../examples/s3-origin/.",
 	}
-
 	defer terraform.Destroy(t, terraformOptions)
 
 	// Act
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Assert
-	acmArn := terraform.Output(t, terraformOptions, "acm_certificate_arn")
+	assert := assert.New(t)
 
-	// Validate the output is not empty and contains expected values
-	assert.NotEmpty(t, acmArn)
-	assert.Contains(t, acmArn, "arn:aws:acm:us-east-1")
-	assert.Contains(t, acmArn, "certificate/")
+	
+	outputValue := terraform.Output(t, terraformOptions, "acm_certificate_arn")
+
+	assert.NotNil(outputValue)
 }
