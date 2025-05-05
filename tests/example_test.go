@@ -22,13 +22,7 @@ func TestTerraformExample(t *testing.T) {
 	assert := assert.New(t)
 
 	
-	// outputValue := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
-	// outputValue := terraform.OutputMap(t, terraformOptions, "cloudfront_domain_name")["0"]
-	outputs := terraform.OutputMap(t, terraformOptions, "cloudfront_domain_name")
-	domain := outputs["0"]
-	fmt.Println("CloudFront domain map:", outputs)
-	fmt.Println("CloudFront domain:", domain)
+	outputValue := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
 
-	// assert.NotNil(outputValue)
-	assert.NotNil(domain)
+	assert.NotNil(outputValue)
 }
