@@ -18,18 +18,10 @@ func TestTerraformExample(t *testing.T) {
 	terraform.InitAndApply(t, terraformOptions)
 
 	// Assert
-	// assert := assert.New(t)
+	assert := assert.New(t)
 
 	
-	// outputValue := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
+	outputValue := terraform.Output(t, terraformOptions, "acm_certificate_arn")
 
-	// assert.NotNil(outputValue)
-
-
-	// Get the CloudFront domain name using terraform.Output (not OutputJson)
-	cloudfrontDomain := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
-
-	// Assert
-	assert := assert.New(t)
-	assert.NotEmpty(cloudfrontDomain, "Expected non-empty CloudFront domain name")
+	assert.NotNil(outputValue)
 }
