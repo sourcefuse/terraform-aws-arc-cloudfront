@@ -21,7 +21,18 @@ func TestTerraformExample(t *testing.T) {
 	assert := assert.New(t)
 
 	
-	outputValue := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
+	// outputValue := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
 
-	assert.NotNil(outputValue)
+	// assert.NotNil(outputValue)
+
+	// Use OutputJson to get raw JSON string
+	rawOutput := terraform.OutputJson(t, terraformOptions, "cloudfront_domain_name")
+
+	// Unmarshal the JSON string into a Go string
+	var domain string
+	err := json.Unmarshal([]byte(rawOutput), &domain)
+
+	// Validate
+	assert.NoError(err, "Failed to unmarshal cloudfront_domain_name output")
+	assert.NotEmpty(domain, "Expected a non-empty CloudFront domain name")
 }

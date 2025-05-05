@@ -20,8 +20,6 @@ jobs:
       - name: Configure AWS credentials via OIDC
         uses: aws-actions/configure-aws-credentials@v2
         with:
-        #   role-to-assume: arn:aws:iam::<AWS_ACCOUNT_ID>:role/<OIDC_ROLE_NAME>
-        #   role-to-assume: arn:aws:iam::884360309640:role/arc-iac-oidc-github-role
           role-to-assume: ${{ secrets.ARC_IAC_TERRATEST_ROLE }}
           aws-region: us-east-1
 
