@@ -1,8 +1,3 @@
-output "origin_s3_bucket" {
-  value       = module.cloudfront.origin_s3_bucket
-  description = "Origin bucket name"
-}
-
 output "cloudfront_id" {
   value       = module.cloudfront.cloudfront_id
   description = "CloudFront ID"

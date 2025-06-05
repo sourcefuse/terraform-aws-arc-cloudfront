@@ -15,9 +15,3 @@ variable "environment" {
   description = "ENV for the resource"
   default     = "dev"
 }
-
-variable "namespace" {
-  description = "Namespace in which we're working"
-  type        = string
-  default     = "arc"
-}
