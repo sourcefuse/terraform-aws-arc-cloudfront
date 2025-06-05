@@ -10,7 +10,7 @@ import (
 func TestTerraformExample(t *testing.T) {
 	// Arrange
 	terraformOptions := &terraform.Options{
-		TerraformDir: "../example/.",
+		TerraformDir: "../examples/s3-origin/.",
 	}
 	defer terraform.Destroy(t, terraformOptions)
 
@@ -20,6 +20,8 @@ func TestTerraformExample(t *testing.T) {
 	// Assert
 	assert := assert.New(t)
 
-	outputValue := terraform.Output(t, terraformOptions, "cloudfront_domain_name")
+	
+	outputValue := terraform.Output(t, terraformOptions, "acm_certificate_arn")
+
 	assert.NotNil(outputValue)
 }
