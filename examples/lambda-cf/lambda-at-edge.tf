@@ -44,6 +44,10 @@ resource "aws_lambda_function" "this" {
   publish       = true
 
   provider = aws.lambda_at_edge
+
+  timeouts {
+    delete = "60m"
+  }
 }
 
 /**
