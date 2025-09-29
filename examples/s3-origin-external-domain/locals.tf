@@ -13,6 +13,7 @@ locals {
     default_root_object = "index.html"
     enable_logging      = false
 
+    # To avoid creating ACM certificate and route53 records
     create_route53_records = false
     aliases                = []
     route53_root_domain    = "arc-poc.link"
