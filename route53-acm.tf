@@ -4,7 +4,7 @@
 ##################################################################################
 
 resource "aws_acm_certificate" "this" {
-  count                     = var.acm_details.domain_name == "" ? 0 : 1
+  count                     = var.acm_details.domain_name == null ? 0 : 1
   domain_name               = var.acm_details.domain_name
   validation_method         = "DNS"
   subject_alternative_names = var.acm_details.subject_alternative_names
@@ -26,7 +26,7 @@ data "aws_route53_zone" "this" {
 
 # Create CNAME for validating ACM certificate
 resource "aws_route53_record" "this" {
-  for_each = var.create_route53_records ? {
+  for_each = var.create_route53_records && var.acm_details.domain_name != null ? {
     for dvo in aws_acm_certificate.this[0].domain_validation_options : dvo.domain_name => {
       name   = dvo.resource_record_name
       record = dvo.resource_record_value
@@ -44,7 +44,7 @@ resource "aws_route53_record" "this" {
 
 
 resource "aws_acm_certificate_validation" "this" {
-  count                   = var.acm_details.domain_name == "" ? 0 : 1
+  count                   = var.acm_details.domain_name == null ? 0 : 1
   certificate_arn         = aws_acm_certificate.this[0].arn
   validation_record_fqdns = [for record in aws_route53_record.this : record.fqdn]
   provider                = aws.acm

@@ -55,6 +55,7 @@ variable "description" {
 variable "route53_root_domain" {
   description = "Domain to add to route 53 as alias to distribution"
   type        = string
+  default     = null
 }
 
 variable "default_cache_behavior" {
@@ -382,18 +383,18 @@ variable "enable_logging" {
 
 variable "acm_details" {
   type = object({
-    domain_name               = string,
-    subject_alternative_names = list(string),
+    domain_name               = optional(string, null)
+    subject_alternative_names = optional(list(string), [])
   })
   description = <<-EOT
   	Details required for creating certificate
 	eg. {
-			domain_name               = "test.com",
+			domain_name               = "test.com"
 			subject_alternative_names = ["www.test.com"]
 		}
   EOT
   default = {
-    domain_name               = "",
+    domain_name               = null
     subject_alternative_names = []
   }
 }
