@@ -142,37 +142,36 @@ resource "aws_cloudfront_response_headers_policy" "this" {
   }
 
   # TODO: Fix issue in setting below configs
-  #   dynamic "remove_headers_config" {
-  #     for_each = each.value.remove_headers_config == null ? [] : [each.value.remove_headers_config]
+  dynamic "remove_headers_config" {
+    for_each = each.value.remove_headers_config == null ? [] : [each.value.remove_headers_config]
 
-  #     content {
-  #       dynamic "items" {
-  #         for_each = remove_headers_config
+    content {
+      dynamic "items" {
+        for_each = remove_headers_config
 
-  #         content {
-  #           header = items
-  #         }
-  #       }
-  #     }
-  #   }
+        content {
+          header = items
+        }
+      }
+    }
+  }
 
 
-  #   dynamic "custom_headers_config" {
-  #     for_each = each.value.custom_headers_config == null ? [] : [each.value.custom_headers_config]
+  dynamic "custom_headers_config" {
+    for_each = each.value.custom_headers_config == null ? [] : [each.value.custom_headers_config]
 
-  #     content {
-  #       dynamic "items" {
-  #         for_each = custom_headers_config
+    content {
+      dynamic "items" {
+        for_each = custom_headers_config.value.items
 
-  #         content {
-  #           header   = items.header
-  #           override = try(items.override, false)
-  #           value    = try(items.value, "none")
-  #         }
-  #       }
-
-  #     }
-  #   }
+        content {
+          header   = items.value.header
+          override = items.value.override
+          value    = items.value.value
+        }
+      }
+    }
+  }
 
 }
 
@@ -404,7 +403,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "logging_config" {
-    for_each = var.enable_logging ? [1] : []
+    for_each = var.logging_config.enabled ? [1] : []
 
     content {
       include_cookies = false

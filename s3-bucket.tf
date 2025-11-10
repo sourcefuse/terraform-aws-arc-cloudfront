@@ -8,7 +8,7 @@ module "kms" {
   version = "1.0.11"
   count   = var.s3_kms_details.s3_bucket_encryption_type == "SSE-KMS" && var.s3_kms_details.kms_key_arn == null ? 1 : 0
 
-  alias                   = "${local.environment}-s3-${var.logging_bucket}"
+  alias                   = "${local.environment}-s3-${var.logging_config.bucket}"
   deletion_window_in_days = 7
   policy = jsonencode({
     Version = "2012-10-17"
@@ -50,7 +50,7 @@ data "aws_s3_bucket" "origin" {
 
 module "s3_bucket" {
   source  = "sourcefuse/arc-s3/aws"
-  version = "0.0.5"
+  version = "0.0.7"
 
   for_each = {
     for index, origin in var.origins : origin.origin_id => origin
@@ -65,11 +65,11 @@ module "s3_bucket" {
 
 module "s3_bucket_logs" {
   source  = "sourcefuse/arc-s3/aws"
-  version = "0.0.5"
+  version = "0.0.7"
 
-  count = var.enable_logging ? 1 : 0
+  count = var.logging_config.enabled && var.logging_config.bucket != null ? 1 : 0
 
-  name = "${var.logging_bucket}-logging"
+  name = "${var.logging_config.bucket}-logging"
   acl  = "private"
 
   tags = var.tags

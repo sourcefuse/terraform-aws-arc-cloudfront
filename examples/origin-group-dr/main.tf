@@ -92,7 +92,6 @@ module "cloudfront" {
   route53_root_domain    = var.route53_root_domain
   create_route53_records = var.create_route53_records
   aliases                = []
-  enable_logging         = false
 
   default_cache_behavior = {
     origin_id                             = "failover-group"

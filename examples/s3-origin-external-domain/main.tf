@@ -29,7 +29,6 @@ module "cloudfront" {
   route53_root_domain    = local.cloudfront_config.route53_root_domain
   create_route53_records = local.cloudfront_config.create_route53_records
   aliases                = local.cloudfront_config.aliases
-  enable_logging         = local.cloudfront_config.enable_logging
   default_cache_behavior = local.cloudfront_config.default_cache_behavior
   viewer_certificate     = local.cloudfront_config.viewer_certificate
   acm_details            = local.cloudfront_config.acm_details

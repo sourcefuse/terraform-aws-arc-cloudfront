@@ -41,7 +41,6 @@
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
 | <a name="input_create_route53_records"></a> [create\_route53\_records](#input\_create\_route53\_records) | made optional route53 | `bool` | `true` | no |
-| <a name="input_enable_logging"></a> [enable\_logging](#input\_enable\_logging) | Enable logging for Cloudfront destribution, this will create new S3 bucket | `bool` | `false` | no |
 | <a name="input_region"></a> [region](#input\_region) | AWS region | `string` | `"us-east-1"` | no |
 
 ## Outputs

@@ -3,10 +3,21 @@ variable "aliases" {
   type        = list(string)
 }
 
-variable "logging_bucket" {
-  description = "S3 bucket used for storing logs"
-  type        = string
-  default     = null
+variable "logging_config" {
+  description = "CloudFront logging configuration"
+  type = object({
+    enabled = optional(bool, false)
+    bucket  = optional(string)
+  })
+  default = {
+    enabled = false
+    bucket  = null
+  }
+
+  validation {
+    condition     = !var.logging_config.enabled || var.logging_config.bucket != null
+    error_message = "bucket must be provided when enabled is true."
+  }
 }
 
 variable "origins" {
@@ -130,12 +141,6 @@ variable "tags" {
   type        = map(string)
   description = "Tags for AWS resources"
   default     = {}
-}
-
-variable "namespace" {
-  type        = string
-  description = "Namespace for the resources."
-  default     = null
 }
 
 variable "create_route53_records" {
@@ -376,11 +381,7 @@ variable "s3_kms_details" {
   }
 }
 
-variable "enable_logging" {
-  type        = bool
-  description = "Enable logging for Clouffront destribution, this will create new S3 bucket"
-  default     = false
-}
+
 
 variable "acm_details" {
   type = object({
