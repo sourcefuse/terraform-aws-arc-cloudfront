@@ -40,6 +40,20 @@ variable "origins" {
   default     = []
 }
 
+variable "origin_groups" {
+  type = list(object({
+    origin_id = string
+    failover_criteria = object({
+      status_codes = list(number)
+    })
+    members = list(object({
+      origin_id = string
+    }))
+  }))
+  description = "List of Origin Groups for failover support"
+  default     = []
+}
+
 variable "default_root_object" {
   type        = string
   default     = "index.html"

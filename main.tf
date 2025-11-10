@@ -264,6 +264,31 @@ resource "aws_cloudfront_distribution" "this" {
     }
   }
 
+  dynamic "origin_group" {
+    for_each = {
+      for index, group in var.origin_groups :
+      group.origin_id => group
+    }
+    iterator = g
+
+    content {
+      origin_id = g.value.origin_id
+
+      failover_criteria {
+        status_codes = g.value.failover_criteria.status_codes
+      }
+
+      dynamic "member" {
+        for_each = g.value.members
+        iterator = m
+
+        content {
+          origin_id = m.value.origin_id
+        }
+      }
+    }
+  }
+
   comment             = var.description
   enabled             = true
   is_ipv6_enabled     = true

@@ -15,6 +15,8 @@ For more information about this repository and its usage, please see [Terraform 
 
 ## Usage
 
+**Important Note**: When using custom ACM certificates (`acm_details.domain_name` is set), the certificate must be created in the `us-east-1` region as required by CloudFront. If you're deploying in a different region, you'll need to configure a provider alias for `us-east-1`.
+
 To see a full example, check out the [main.tf](https://github.com/sourcefuse/terraform-aws-arc-cloudfront/blob/main/example/main.tf) file in the example folder.
 
 ``` tcl
@@ -162,6 +164,22 @@ module "cloudfront" {
     response_page_path    = "/custom_404.html"
   }]
 
+  # Origin Groups for Disaster Recovery
+  origin_groups = [{
+    origin_id = "failover-group"
+    failover_criteria = {
+      status_codes = [403, 404, 500, 502, 503, 504]
+    }
+    members = [
+      {
+        origin_id = "primary-origin"
+      },
+      {
+        origin_id = "secondary-origin"
+      }
+    ]
+  }]
+
   s3_kms_details = {
     s3_bucket_encryption_type = "SSE-S3", //Encryption for S3 bucket , options : `SSE-S3` , `SSE-KMS`
     kms_key_administrators    = [],
@@ -236,6 +254,7 @@ module "cloudfront" {
 | <a name="input_geo_restriction"></a> [geo\_restriction](#input\_geo\_restriction) | Geographic restriction | <pre>object({<br/>    restriction_type = optional(string, "blacklist")<br/>    locations        = optional(list(string), ["KP", "RU"])<br/>  })</pre> | <pre>{<br/>  "locations": [],<br/>  "restriction_type": "none"<br/>}</pre> | no |
 | <a name="input_logging_bucket"></a> [logging\_bucket](#input\_logging\_bucket) | S3 bucket used for storing logs | `string` | `null` | no |
 | <a name="input_namespace"></a> [namespace](#input\_namespace) | Namespace for the resources. | `string` | `null` | no |
+| <a name="input_origin_groups"></a> [origin\_groups](#input\_origin\_groups) | List of Origin Groups for failover support | <pre>list(object({<br/>    origin_id = string<br/>    failover_criteria = object({<br/>      status_codes = list(number)<br/>    })<br/>    members = list(object({<br/>      origin_id = string<br/>    }))<br/>  }))</pre> | `[]` | no |
 | <a name="input_origin_request_policies"></a> [origin\_request\_policies](#input\_origin\_request\_policies) | Origin request policies,<br/>		eg. {<br/>	"origin-req-policy" = {<br/>	cookies\_config = {<br/>		cookie\_behavior = "none",<br/>		items           = []<br/>	},<br/>	headers\_config = {<br/>		header\_behavior = "whitelist",<br/>		items = ["Accept", "Accept-Charset", "Accept-Datetime", "Accept-Language",<br/>		"Access-Control-Request-Method", "Access-Control-Request-Headers", "CloudFront-Forwarded-Proto", "CloudFront-Is-Android-Viewer",<br/>		"CloudFront-Is-Desktop-Viewer", "CloudFront-Is-IOS-Viewer"]<br/>	},<br/>	query\_strings\_config = {<br/>		query\_string\_behavior = "none",<br/>		items                 = []<br/>	}<br/>} } | <pre>map(object({<br/>    cookies_config = object({<br/>      cookie_behavior = string<br/>      items           = list(string)<br/>    }),<br/>    headers_config = object({<br/>      header_behavior = string<br/>      items           = list(string)<br/>    }),<br/>    query_strings_config = object({<br/>      query_string_behavior = string<br/>      items                 = list(string)<br/>    })<br/>  }))</pre> | `{}` | no |
 | <a name="input_origins"></a> [origins](#input\_origins) | List of Origins for Cloudfront | <pre>list(object({<br/>    origin_type         = string // S3 or custom origin<br/>    origin_id           = string<br/>    origin_path         = optional(string)<br/>    domain_name         = string<br/>    bucket_name         = optional(string) // required of origin is S3<br/>    create_bucket       = bool             // required of origin is S3<br/>    connection_attempts = optional(number, 3)<br/>    connection_timeout  = optional(number, 10)<br/>    cors_configuration  = optional(any) // cors for S3<br/>    origin_shield = optional(object({<br/>      enabled              = bool<br/>      origin_shield_region = string<br/>      }), {<br/>      enabled              = false<br/>      origin_shield_region = null<br/>    })<br/>    custom_origin_config = optional(object({<br/>      http_port                = number<br/>      https_port               = number<br/>      origin_protocol_policy   = string<br/>      origin_ssl_protocols     = list(string)<br/>      origin_keepalive_timeout = optional(number, 5)<br/>      origin_read_timeout      = optional(number, 30)<br/>    }))<br/>  }))</pre> | `[]` | no |
 | <a name="input_price_class"></a> [price\_class](#input\_price\_class) | Price class for this distribution. One of PriceClass\_All, PriceClass\_200, PriceClass\_100. | `string` | `"PriceClass_All"` | no |
