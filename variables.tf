@@ -126,19 +126,6 @@ variable "cache_behaviors" {
   default = []
 }
 
-variable "cors_configuration" {
-  type = list(object({
-    allowed_headers = list(string)
-    allowed_methods = list(string)
-    allowed_origins = list(string)
-    expose_headers  = list(string)
-    max_age_seconds = number
-  }))
-  default = null
-
-  description = "Specifies the allowed headers, methods, origins and exposed headers when using CORS on this bucket"
-}
-
 variable "tags" {
   type        = map(string)
   description = "Tags for AWS resources"

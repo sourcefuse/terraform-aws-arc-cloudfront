@@ -1,5 +1,3 @@
-data "aws_partition" "this" {}
-
 data "aws_caller_identity" "this" {}
 
 resource "aws_cloudfront_cache_policy" "this" {

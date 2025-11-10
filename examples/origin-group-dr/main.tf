@@ -10,8 +10,36 @@ module "tags" {
   project     = var.project_name
 
   extra_tags = {
-    RepoName = "terraform-aws-arc-cloudfront"
+    RepoName = "terraform-aws-refarch-cloudfront"
   }
+}
+
+################################################################################
+## S3 Buckets for Origins
+################################################################################
+
+module "primary_bucket" {
+  source  = "sourcefuse/arc-s3/aws"
+  version = "0.0.5"
+
+  name = "${var.project_name}-primary-${random_id.bucket_suffix.hex}"
+  acl  = "private"
+
+  tags = module.tags.tags
+}
+
+module "secondary_bucket" {
+  source  = "sourcefuse/arc-s3/aws"
+  version = "0.0.5"
+
+  name = "${var.project_name}-secondary-${random_id.bucket_suffix.hex}"
+  acl  = "private"
+
+  tags = module.tags.tags
+}
+
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
 }
 
 ################################################################################
@@ -30,15 +58,15 @@ module "cloudfront" {
       origin_type   = "s3"
       origin_id     = "primary-origin"
       domain_name   = ""
-      bucket_name   = "arc-poc-primary-bucket"
-      create_bucket = true
+      bucket_name   = module.primary_bucket.bucket_id
+      create_bucket = false
     },
     {
       origin_type   = "s3"
       origin_id     = "secondary-origin"
       domain_name   = ""
-      bucket_name   = "arc-pocsecondary-bucket"
-      create_bucket = true
+      bucket_name   = module.secondary_bucket.bucket_id
+      create_bucket = false
     }
   ]
 
