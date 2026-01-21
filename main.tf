@@ -181,7 +181,7 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
     if origin.origin_type == "s3"
   }
 
-  bucket = each.value.create_bucket ? module.s3_bucket[each.value.origin_id].bucket_id : data.aws_s3_bucket.origin[each.value.origin_id].id
+  bucket = each.value.create_bucket ? module.s3_bucket[each.value.origin_id].bucket_id : each.value.bucket_name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -193,7 +193,7 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = each.value.create_bucket ? "${module.s3_bucket[each.value.origin_id].bucket_arn}/*" : "${data.aws_s3_bucket.origin[each.value.origin_id].arn}/*"
+        Resource = each.value.create_bucket ? "${module.s3_bucket[each.value.origin_id].bucket_arn}/*" : "arn:aws:s3:::${each.value.bucket_name}/*"
         Condition = {
           StringEquals = {
             "aws:SourceArn" = aws_cloudfront_distribution.this.arn
@@ -230,7 +230,7 @@ resource "aws_cloudfront_distribution" "this" {
     iterator = i
 
     content {
-      domain_name              = i.value.origin_type == "s3" ? (i.value.create_bucket ? module.s3_bucket[i.value.origin_id].bucket_regional_domain_name : data.aws_s3_bucket.origin[i.value.origin_id].bucket_regional_domain_name) : i.value.domain_name
+      domain_name              = i.value.origin_type == "s3" ? (i.value.create_bucket ? module.s3_bucket[i.value.origin_id].bucket_regional_domain_name : i.value.domain_name) : i.value.domain_name
       origin_id                = i.value.origin_id
       origin_access_control_id = i.value.origin_type == "s3" ? aws_cloudfront_origin_access_control.s3[i.value.origin_id].id : null
 

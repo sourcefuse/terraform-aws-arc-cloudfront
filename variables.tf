@@ -25,7 +25,7 @@ variable "origins" {
     origin_type         = string // S3 or custom origin
     origin_id           = string
     origin_path         = optional(string)
-    domain_name         = string
+    domain_name         = string           // required of origin is custom and if S3 bukcet is created outside the module
     bucket_name         = optional(string) // required of origin is S3
     create_bucket       = bool             // required of origin is S3
     connection_attempts = optional(number, 3)

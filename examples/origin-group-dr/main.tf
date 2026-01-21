@@ -20,7 +20,7 @@ module "tags" {
 
 module "primary_bucket" {
   source  = "sourcefuse/arc-s3/aws"
-  version = "0.0.5"
+  version = "0.0.7"
 
   name = "${var.project_name}-primary-${random_id.bucket_suffix.hex}"
   acl  = "private"
@@ -30,7 +30,11 @@ module "primary_bucket" {
 
 module "secondary_bucket" {
   source  = "sourcefuse/arc-s3/aws"
-  version = "0.0.5"
+  version = "0.0.7"
+
+  providers = {
+    aws = aws.dr
+  }
 
   name = "${var.project_name}-secondary-${random_id.bucket_suffix.hex}"
   acl  = "private"
@@ -57,14 +61,14 @@ module "cloudfront" {
     {
       origin_type   = "s3"
       origin_id     = "primary-origin"
-      domain_name   = ""
+      domain_name   = module.primary_bucket.bucket_regional_domain_name
       bucket_name   = module.primary_bucket.bucket_id
       create_bucket = false
     },
     {
       origin_type   = "s3"
       origin_id     = "secondary-origin"
-      domain_name   = ""
+      domain_name   = module.secondary_bucket.bucket_regional_domain_name
       bucket_name   = module.secondary_bucket.bucket_id
       create_bucket = false
     }
@@ -87,7 +91,6 @@ module "cloudfront" {
     }
   ]
 
-  namespace              = "dr-example"
   description            = "CloudFront distribution with origin group for DR"
   route53_root_domain    = var.route53_root_domain
   create_route53_records = var.create_route53_records

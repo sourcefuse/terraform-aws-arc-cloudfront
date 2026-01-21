@@ -40,14 +40,6 @@ module "kms" {
   tags = var.tags
 }
 
-data "aws_s3_bucket" "origin" {
-  for_each = {
-    for index, origin in var.origins : origin.origin_id => origin
-    if origin.create_bucket == false && origin.origin_type == "s3"
-  }
-  bucket = each.value.bucket_name
-}
-
 module "s3_bucket" {
   source  = "sourcefuse/arc-s3/aws"
   version = "0.0.7"

@@ -20,3 +20,8 @@ provider "aws" {
   alias  = "acm"
   region = "us-east-1"
 }
+
+provider "aws" {
+  alias  = "dr"
+  region = "us-east-2"
+}
