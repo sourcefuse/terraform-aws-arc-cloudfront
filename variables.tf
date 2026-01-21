@@ -22,15 +22,17 @@ variable "logging_config" {
 
 variable "origins" {
   type = list(object({
-    origin_type         = string // S3 or custom origin
-    origin_id           = string
-    origin_path         = optional(string)
-    domain_name         = string           // required of origin is custom and if S3 bukcet is created outside the module
-    bucket_name         = optional(string) // required of origin is S3
-    create_bucket       = bool             // required of origin is S3
-    connection_attempts = optional(number, 3)
-    connection_timeout  = optional(number, 10)
-    cors_configuration  = optional(any) // cors for S3
+    origin_type          = string // S3 or custom origin
+    origin_id            = string
+    origin_path          = optional(string)
+    domain_name          = string           // required of origin is custom and if S3 bukcet is created outside the module
+    bucket_name          = optional(string) // required of origin is S3
+    create_bucket        = bool             // required of origin is S3
+    connection_attempts  = optional(number, 3)
+    connection_timeout   = optional(number, 10)
+    cors_configuration   = optional(any)        // cors for S3
+    primary_origin       = optional(bool, true) // used in origin groups to identify primary origin
+    manage_bucket_policy = optional(bool, true) // whether to manage bucket policy for S3 origin
     origin_shield = optional(object({
       enabled              = bool
       origin_shield_region = string

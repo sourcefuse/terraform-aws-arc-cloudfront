@@ -178,7 +178,7 @@ resource "aws_cloudfront_response_headers_policy" "this" {
 resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
   for_each = {
     for index, origin in var.origins : origin.origin_id => origin
-    if origin.origin_type == "s3"
+    if origin.origin_type == "s3" && try(origin.manage_bucket_policy, true) == true
   }
 
   bucket = each.value.create_bucket ? module.s3_bucket[each.value.origin_id].bucket_id : each.value.bucket_name

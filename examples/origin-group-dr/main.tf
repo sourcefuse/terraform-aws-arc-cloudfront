@@ -59,18 +59,20 @@ module "cloudfront" {
 
   origins = [
     {
-      origin_type   = "s3"
-      origin_id     = "primary-origin"
-      domain_name   = module.primary_bucket.bucket_regional_domain_name
-      bucket_name   = module.primary_bucket.bucket_id
-      create_bucket = false
+      origin_type          = "s3"
+      origin_id            = "primary-origin"
+      domain_name          = module.primary_bucket.bucket_regional_domain_name
+      bucket_name          = module.primary_bucket.bucket_id
+      create_bucket        = false
+      manage_bucket_policy = true
     },
     {
-      origin_type   = "s3"
-      origin_id     = "secondary-origin"
-      domain_name   = module.secondary_bucket.bucket_regional_domain_name
-      bucket_name   = module.secondary_bucket.bucket_id
-      create_bucket = false
+      origin_type          = "s3"
+      origin_id            = "secondary-origin"
+      domain_name          = module.secondary_bucket.bucket_regional_domain_name
+      bucket_name          = module.secondary_bucket.bucket_id
+      create_bucket        = false
+      manage_bucket_policy = false
     }
   ]
 
@@ -115,4 +117,31 @@ module "cloudfront" {
   }
 
   tags = module.tags.tags
+}
+
+
+resource "aws_s3_bucket_policy" "dr_cdn_bucket_policy" {
+  bucket = module.secondary_bucket.bucket_id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "AllowCloudFrontServicePrincipal"
+        Effect = "Allow"
+        Principal = {
+          Service = "cloudfront.amazonaws.com"
+        }
+        Action   = "s3:GetObject"
+        Resource = "${module.secondary_bucket.bucket_arn}/*"
+        Condition = {
+          StringEquals = {
+            "aws:SourceArn" = module.cloudfront.cloudfront_arn
+          }
+        }
+      }
+    ]
+  })
+
+  provider = aws.dr
 }
