@@ -22,7 +22,6 @@ module "cloudfront" {
   source = "../../"
 
   origins                 = local.cloudfront_config.origins
-  namespace               = local.cloudfront_config.namespace
   description             = local.cloudfront_config.description
   default_root_object     = local.cloudfront_config.default_root_object
   route53_root_domain     = local.cloudfront_config.route53_root_domain

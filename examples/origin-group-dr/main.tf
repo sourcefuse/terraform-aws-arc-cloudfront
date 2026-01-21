@@ -72,7 +72,7 @@ module "cloudfront" {
       domain_name          = module.secondary_bucket.bucket_regional_domain_name
       bucket_name          = module.secondary_bucket.bucket_id
       create_bucket        = false
-      manage_bucket_policy = false
+      manage_bucket_policy = false # Set to false for cross-region buckets, managed by separate aws_s3_bucket_policy resource below
     }
   ]
 

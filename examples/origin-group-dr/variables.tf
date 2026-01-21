@@ -13,7 +13,7 @@ variable "project_name" {
 variable "route53_root_domain" {
   description = "Route53 root domain"
   type        = string
-  default     = null
+  default     = "arc-poc.link"
 }
 
 variable "create_route53_records" {
