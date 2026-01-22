@@ -3,23 +3,36 @@ variable "aliases" {
   type        = list(string)
 }
 
-variable "logging_bucket" {
-  description = "S3 bucket used for storing logs"
-  type        = string
-  default     = null
+variable "logging_config" {
+  description = "CloudFront logging configuration"
+  type = object({
+    enabled = optional(bool, false)
+    bucket  = optional(string)
+  })
+  default = {
+    enabled = false
+    bucket  = null
+  }
+
+  validation {
+    condition     = !var.logging_config.enabled || var.logging_config.bucket != null
+    error_message = "bucket must be provided when enabled is true."
+  }
 }
 
 variable "origins" {
   type = list(object({
-    origin_type         = string // S3 or custom origin
-    origin_id           = string
-    origin_path         = optional(string)
-    domain_name         = string
-    bucket_name         = optional(string) // required of origin is S3
-    create_bucket       = bool             // required of origin is S3
-    connection_attempts = optional(number, 3)
-    connection_timeout  = optional(number, 10)
-    cors_configuration  = optional(any) // cors for S3
+    origin_type          = string // S3 or custom origin
+    origin_id            = string
+    origin_path          = optional(string)
+    domain_name          = string           // required of origin is custom and if S3 bukcet is created outside the module
+    bucket_name          = optional(string) // required of origin is S3
+    create_bucket        = bool             // required of origin is S3
+    connection_attempts  = optional(number, 3)
+    connection_timeout   = optional(number, 10)
+    cors_configuration   = optional(any)        // cors for S3
+    primary_origin       = optional(bool, true) // used in origin groups to identify primary origin
+    manage_bucket_policy = optional(bool, true) // whether to manage bucket policy for S3 origin
     origin_shield = optional(object({
       enabled              = bool
       origin_shield_region = string
@@ -37,6 +50,20 @@ variable "origins" {
     }))
   }))
   description = "List of Origins for Cloudfront"
+  default     = []
+}
+
+variable "origin_groups" {
+  type = list(object({
+    origin_id = string
+    failover_criteria = object({
+      status_codes = list(number)
+    })
+    members = list(object({
+      origin_id = string
+    }))
+  }))
+  description = "List of Origin Groups for failover support"
   default     = []
 }
 
@@ -112,29 +139,10 @@ variable "cache_behaviors" {
   default = []
 }
 
-variable "cors_configuration" {
-  type = list(object({
-    allowed_headers = list(string)
-    allowed_methods = list(string)
-    allowed_origins = list(string)
-    expose_headers  = list(string)
-    max_age_seconds = number
-  }))
-  default = null
-
-  description = "Specifies the allowed headers, methods, origins and exposed headers when using CORS on this bucket"
-}
-
 variable "tags" {
   type        = map(string)
   description = "Tags for AWS resources"
   default     = {}
-}
-
-variable "namespace" {
-  type        = string
-  description = "Namespace for the resources."
-  default     = null
 }
 
 variable "create_route53_records" {
@@ -375,11 +383,7 @@ variable "s3_kms_details" {
   }
 }
 
-variable "enable_logging" {
-  type        = bool
-  description = "Enable logging for Clouffront destribution, this will create new S3 bucket"
-  default     = false
-}
+
 
 variable "acm_details" {
   type = object({

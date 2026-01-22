@@ -6,7 +6,7 @@ output "origin_s3_bucket" {
 }
 
 output "logging_s3_bucket" {
-  value       = var.enable_logging ? module.s3_bucket_logs[0].bucket_id : null
+  value       = var.logging_config.enabled ? module.s3_bucket_logs[0].bucket_id : null
   description = "Logging bucket name"
 }
 

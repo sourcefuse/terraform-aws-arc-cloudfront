@@ -38,7 +38,6 @@ module "cloudfront" {
   route53_root_domain    = "arc-poc.link" // Used to fetch the Hosted Zone
   create_route53_records = var.create_route53_records
   aliases                = ["cf.arc-poc.link", "www.cf.arc-poc.link", "test.arc-poc.link", "*.arc-poc.link", "test1.arc-poc.link"]
-  enable_logging         = var.enable_logging // Create a new S3 bucket for storing Cloudfront logs
 
   default_cache_behavior = {
     origin_id                               = "cloudfront-arc",

@@ -3,7 +3,7 @@ locals {
     origins = [{
       origin_type   = "s3",
       origin_id     = "arc-dev-s3-origin",
-      domain_name   = "",
+      domain_name   = "arc-dev-s3-origin.s3.us-east-1.amazonaws.com",
       bucket_name   = "arc-dev-s3-origin",
       create_bucket = false
     }]

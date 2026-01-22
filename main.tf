@@ -1,5 +1,3 @@
-data "aws_partition" "this" {}
-
 data "aws_caller_identity" "this" {}
 
 resource "aws_cloudfront_cache_policy" "this" {
@@ -144,47 +142,46 @@ resource "aws_cloudfront_response_headers_policy" "this" {
   }
 
   # TODO: Fix issue in setting below configs
-  #   dynamic "remove_headers_config" {
-  #     for_each = each.value.remove_headers_config == null ? [] : [each.value.remove_headers_config]
+  dynamic "remove_headers_config" {
+    for_each = each.value.remove_headers_config == null ? [] : [each.value.remove_headers_config]
 
-  #     content {
-  #       dynamic "items" {
-  #         for_each = remove_headers_config
+    content {
+      dynamic "items" {
+        for_each = remove_headers_config
 
-  #         content {
-  #           header = items
-  #         }
-  #       }
-  #     }
-  #   }
+        content {
+          header = items
+        }
+      }
+    }
+  }
 
 
-  #   dynamic "custom_headers_config" {
-  #     for_each = each.value.custom_headers_config == null ? [] : [each.value.custom_headers_config]
+  dynamic "custom_headers_config" {
+    for_each = each.value.custom_headers_config == null ? [] : [each.value.custom_headers_config]
 
-  #     content {
-  #       dynamic "items" {
-  #         for_each = custom_headers_config
+    content {
+      dynamic "items" {
+        for_each = custom_headers_config.value.items
 
-  #         content {
-  #           header   = items.header
-  #           override = try(items.override, false)
-  #           value    = try(items.value, "none")
-  #         }
-  #       }
-
-  #     }
-  #   }
+        content {
+          header   = items.value.header
+          override = items.value.override
+          value    = items.value.value
+        }
+      }
+    }
+  }
 
 }
 
 resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
   for_each = {
     for index, origin in var.origins : origin.origin_id => origin
-    if origin.origin_type == "s3"
+    if origin.origin_type == "s3" && try(origin.manage_bucket_policy, true) == true
   }
 
-  bucket = each.value.create_bucket ? module.s3_bucket[each.value.origin_id].bucket_id : data.aws_s3_bucket.origin[each.value.origin_id].id
+  bucket = each.value.create_bucket ? module.s3_bucket[each.value.origin_id].bucket_id : each.value.bucket_name
 
   policy = jsonencode({
     Version = "2012-10-17"
@@ -196,7 +193,7 @@ resource "aws_s3_bucket_policy" "cdn_bucket_policy" {
           Service = "cloudfront.amazonaws.com"
         }
         Action   = "s3:GetObject"
-        Resource = each.value.create_bucket ? "${module.s3_bucket[each.value.origin_id].bucket_arn}/*" : "${data.aws_s3_bucket.origin[each.value.origin_id].arn}/*"
+        Resource = each.value.create_bucket ? "${module.s3_bucket[each.value.origin_id].bucket_arn}/*" : "arn:aws:s3:::${each.value.bucket_name}/*"
         Condition = {
           StringEquals = {
             "aws:SourceArn" = aws_cloudfront_distribution.this.arn
@@ -233,7 +230,7 @@ resource "aws_cloudfront_distribution" "this" {
     iterator = i
 
     content {
-      domain_name              = i.value.origin_type == "s3" ? (i.value.create_bucket ? module.s3_bucket[i.value.origin_id].bucket_regional_domain_name : data.aws_s3_bucket.origin[i.value.origin_id].bucket_regional_domain_name) : i.value.domain_name
+      domain_name              = i.value.origin_type == "s3" ? (i.value.create_bucket ? module.s3_bucket[i.value.origin_id].bucket_regional_domain_name : i.value.domain_name) : i.value.domain_name
       origin_id                = i.value.origin_id
       origin_access_control_id = i.value.origin_type == "s3" ? aws_cloudfront_origin_access_control.s3[i.value.origin_id].id : null
 
@@ -259,6 +256,31 @@ resource "aws_cloudfront_distribution" "this" {
         content {
           enabled              = try(i.value.custom_origin_config.enabled, null)
           origin_shield_region = try(i.value.custom_origin_config.origin_shield_region, null)
+        }
+      }
+    }
+  }
+
+  dynamic "origin_group" {
+    for_each = {
+      for index, group in var.origin_groups :
+      group.origin_id => group
+    }
+    iterator = g
+
+    content {
+      origin_id = g.value.origin_id
+
+      failover_criteria {
+        status_codes = g.value.failover_criteria.status_codes
+      }
+
+      dynamic "member" {
+        for_each = g.value.members
+        iterator = m
+
+        content {
+          origin_id = m.value.origin_id
         }
       }
     }
@@ -381,7 +403,7 @@ resource "aws_cloudfront_distribution" "this" {
   }
 
   dynamic "logging_config" {
-    for_each = var.enable_logging ? [1] : []
+    for_each = var.logging_config.enabled ? [1] : []
 
     content {
       include_cookies = false
