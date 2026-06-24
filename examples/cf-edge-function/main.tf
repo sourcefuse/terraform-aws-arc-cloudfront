@@ -156,7 +156,6 @@ module "cloudfront" {
 
 }
 
-
 locals {
   response_headers_policy = {
     "test-security-headers-policy" = {
