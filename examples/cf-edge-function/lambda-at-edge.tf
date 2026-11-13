@@ -38,7 +38,7 @@ resource "aws_lambda_function" "this" {
   function_name = "test-edge-function-test"
   role          = aws_iam_role.lambda_at_edge.arn
   handler       = "edgeFunction.handler"
-  runtime       = "nodejs18.x"
+  runtime       = "nodejs24.x"
   architectures = ["x86_64"]
   description   = "This is a test Edge function"
   publish       = true
