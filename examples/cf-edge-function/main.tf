@@ -11,8 +11,7 @@ module "tags" {
 }
 
 module "cloudfront" {
-  source  = "sourcefuse/arc-cloudfront/aws"
-  version = "4.0.6"
+  source = "../../"
   providers = {
     aws.acm = aws.acm // Certificate has to be created in us-east-1 region
   }
@@ -33,7 +32,6 @@ module "cloudfront" {
     }
   ]
 
-  namespace              = "test"
   description            = "This is a test Cloudfront distribution"
   route53_root_domain    = "arc-poc.link" // Used to fetch the Hosted Zone
   create_route53_records = var.create_route53_records

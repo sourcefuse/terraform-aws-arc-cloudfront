@@ -3,23 +3,23 @@
 
 | Name | Version |
 |------|---------|
-| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.3.0, < 2.0.0 |
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5, < 2.0.0 |
 | <a name="requirement_archive"></a> [archive](#requirement\_archive) | 2.4.0 |
-| <a name="requirement_aws"></a> [aws](#requirement\_aws) | ~> 4.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 6.5.0, < 7.0.0 |
 
 ## Providers
 
 | Name | Version |
 |------|---------|
 | <a name="provider_archive"></a> [archive](#provider\_archive) | 2.4.0 |
-| <a name="provider_aws"></a> [aws](#provider\_aws) | 4.67.0 |
-| <a name="provider_aws.lambda_at_edge"></a> [aws.lambda\_at\_edge](#provider\_aws.lambda\_at\_edge) | 4.67.0 |
+| <a name="provider_aws"></a> [aws](#provider\_aws) | 6.73.0 |
+| <a name="provider_aws.lambda_at_edge"></a> [aws.lambda\_at\_edge](#provider\_aws.lambda\_at\_edge) | 6.73.0 |
 
 ## Modules
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | sourcefuse/arc-cloudfront/aws | 4.0.6 |
+| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | ../../ | n/a |
 | <a name="module_tags"></a> [tags](#module\_tags) | sourcefuse/arc-tags/aws | 1.2.3 |
 
 ## Resources
